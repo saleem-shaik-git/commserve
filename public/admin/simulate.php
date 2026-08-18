@@ -1,0 +1,32 @@
+<?php
+require_once dirname(__DIR__, 2) . '/app/helpers.php';
+require_once dirname(__DIR__, 2) . '/app/Services/BankingService.php';
+require_role('admin');
+
+$db = Database::connection();
+$service = new BankingService($db);
+$message = null;
+$error = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        verify_csrf();
+        $accountId = (int)($_POST['account_id'] ?? 0);
+        $amount = trim((string)($_POST['amount'] ?? ''));
+        $type = $_POST['type'] ?? '';
+        $description = trim((string)($_POST['description'] ?? 'Simulation adjustment'));
+        if ($type === 'deposit') {
+            $reference = $service->deposit($accountId, $amount, $description ?: 'Simulated deposit');
+        } elseif ($type === 'withdrawal') {
+            $reference = $service->withdraw($accountId, $amount, $description ?: 'Simulated withdrawal');
+        } else {
+            throw new RuntimeException('Invalid simulation operation.');
+        }
+        $message = 'Simulation completed. Reference: '.$reference;
+    } catch (Throwable $e) {
+        $error = $e->getMessage();
+    }
+}
+
+$accounts = $db->query('SELECT a.id,a.account_number,a.available_balance,at.name AS type,at.currency,u.first_name,u.last_name FROM accounts a JOIN account_types at ON at.id=a.account_type_id JOIN users u ON u.id=a.user_id WHERE a.status="active" ORDER BY u.first_name,u.last_name,a.id')->fetchAll();
+?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Simulation - <?=e(APP_NAME)?></title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="bg-light"><nav class="navbar bg-dark navbar-dark"><div class="container-fluid"><a class="navbar-brand fw-bold" href="/commserve/public/admin/index.php">CommServe Admin</a><a class="btn btn-outline-light btn-sm" href="/commserve/public/dashboard.php">Customer Portal</a></div></nav><main class="container py-5" style="max-width:900px"><div class="mb-4"><h2 class="fw-bold">Simulation Control Center</h2><p class="text-muted">Create simulated deposits and withdrawals. No real money is processed.</p></div><?php if($message): ?><div class="alert alert-success"><?=e($message)?></div><?php endif; ?><?php if($error): ?><div class="alert alert-danger"><?=e($error)?></div><?php endif; ?><div class="card border-0 shadow-sm"><div class="card-body p-4"><form method="post"><?=csrf_field()?><div class="row g-3"><div class="col-12"><label class="form-label">Account</label><select name="account_id" class="form-select" required><option value="">Select account</option><?php foreach($accounts as $a): ?><option value="<?=e((string)$a['id'])?>"><?=e($a['first_name'].' '.$a['last_name'])?> · <?=e($a['type'])?> · <?=e($a['account_number'])?> · ₦<?=number_format((float)$a['available_balance'],2)?></option><?php endforeach; ?></select></div><div class="col-md-6"><label class="form-label">Operation</label><select name="type" class="form-select" required><option value="deposit">Simulated deposit</option><option value="withdrawal">Simulated withdrawal</option></select></div><div class="col-md-6"><label class="form-label">Amount</label><div class="input-group"><span class="input-group-text">₦</span><input name="amount" class="form-control" inputmode="decimal" required></div></div><div class="col-12"><label class="form-label">Description</label><input name="description" class="form-control" maxlength="255" value="Simulation adjustment"></div><div class="col-12"><button class="btn btn-primary">Execute simulation</button></div></div></form></div></div></main></body></html>
