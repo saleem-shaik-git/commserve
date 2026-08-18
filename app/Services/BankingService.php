@@ -21,8 +21,8 @@ final class BankingService
             if ((float)$account['available_balance'] < (float)$amount) throw new RuntimeException('Insufficient funds.');
             $reference = $this->createTransaction('withdrawal', $amount, $account['currency'], $description);
             $this->addLedgerEntry($reference, $accountId, 'debit', $amount);
-            $this->recalculateBalance($accountId);
             $this->completeTransaction($reference);
+            $this->recalculateBalance($accountId);
             $this->db->commit();
             return $reference;
         } catch (Throwable $e) {
@@ -48,9 +48,9 @@ final class BankingService
             $reference = $this->createTransaction('transfer', $amount, $from['currency'], $description);
             $this->addLedgerEntry($reference, $fromAccountId, 'debit', $amount);
             $this->addLedgerEntry($reference, $toAccountId, 'credit', $amount);
+            $this->completeTransaction($reference);
             $this->recalculateBalance($fromAccountId);
             $this->recalculateBalance($toAccountId);
-            $this->completeTransaction($reference);
             $this->db->commit();
             return $reference;
         } catch (Throwable $e) {
@@ -83,8 +83,8 @@ final class BankingService
             if ($account['status'] !== 'active') throw new RuntimeException('Account is not active.');
             $reference = $this->createTransaction($type, $amount, $account['currency'], $description);
             $this->addLedgerEntry($reference, $accountId, $entryType, $amount);
-            $this->recalculateBalance($accountId);
             $this->completeTransaction($reference);
+            $this->recalculateBalance($accountId);
             $this->db->commit();
             return $reference;
         } catch (Throwable $e) {
