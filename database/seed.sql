@@ -3,7 +3,7 @@ INSERT INTO roles (name) VALUES ('customer'),('admin') ON DUPLICATE KEY UPDATE n
 INSERT INTO account_types (name,currency,minimum_balance) VALUES ('Savings','NGN',0),('Current','NGN',0) ON DUPLICATE KEY UPDATE name=VALUES(name);
 
 -- Demo password for all seeded users: password
-SET @pw = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4K3ZJ1NqJ3R1Z9F3J6rJ5Q6rGQf5a';
+SET @pw = '$2y$12$e168JUMgLVhnQ6L7JGrdu.KvDbGx0c/SFSI9caGTzsMYyemiKc7BC';
 INSERT INTO users (role_id,email,password_hash,first_name,last_name,phone) VALUES
 ((SELECT id FROM roles WHERE name='admin'),'admin@commserve.test',@pw,'System','Administrator','08000000000'),
 ((SELECT id FROM roles WHERE name='customer'),'john@commserve.test',@pw,'John','Doe','08000000001'),
