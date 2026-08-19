@@ -9,6 +9,7 @@ final class MigrationRunner
     public function migrate(): array
     {
         $this->ensureMetadataTable();
+        $this->baselineLegacyPhase2IfPresent();
         $files = glob(rtrim($this->directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '*.sql') ?: [];
         sort($files, SORT_STRING);
         $applied = [];
@@ -44,4 +45,17 @@ final class MigrationRunner
     {
         $this->db->exec('CREATE TABLE IF NOT EXISTS schema_migrations (version VARCHAR(100) PRIMARY KEY, description VARCHAR(255) NOT NULL, checksum CHAR(64) NOT NULL, applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
     }
+
+    private function baselineLegacyPhase2IfPresent(): void
+    {
+        if (!$this->columnExists('users','transaction_pin_hash') || !$this->columnExists('transactions','idempotency_key') || !$this->tableExists('transaction_otp_challenges')) return;
+        $version='001_phase2_consolidated';
+        $stmt=$this->db->prepare('SELECT 1 FROM schema_migrations WHERE version=?');$stmt->execute([$version]);if($stmt->fetchColumn())return;
+        $file=rtrim($this->directory,DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$version.'.sql';if(!is_file($file))return;
+        $sql=file_get_contents($file);if($sql===false)return;
+        $stmt=$this->db->prepare('INSERT INTO schema_migrations(version,description,checksum) VALUES(?,?,?)');$stmt->execute([$version,'Baseline existing Phase 2/2B schema',hash('sha256',$sql)]);
+    }
+
+    private function columnExists(string $table,string $column):bool{$stmt=$this->db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?');$stmt->execute([$table,$column]);return (int)$stmt->fetchColumn()>0;}
+    private function tableExists(string $table):bool{$stmt=$this->db->prepare('SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?');$stmt->execute([$table]);return (int)$stmt->fetchColumn()>0;}
 }
