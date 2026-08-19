@@ -1,5 +1,11 @@
 USE commserve;
 
+-- Consolidated Phase 2 + Phase 2B migration.
+-- Run this once after database/schema.sql on a fresh Phase 1 database.
+
+ALTER TABLE users
+  ADD COLUMN transaction_pin_hash VARCHAR(255) NULL AFTER password_hash;
+
 ALTER TABLE transactions
   ADD COLUMN reversal_of_transaction_id BIGINT UNSIGNED NULL AFTER completed_at,
   ADD COLUMN refund_of_transaction_id BIGINT UNSIGNED NULL AFTER reversal_of_transaction_id,
@@ -18,7 +24,7 @@ ALTER TABLE beneficiaries
   ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at,
   ADD KEY idx_beneficiaries_user_status (user_id,status);
 
-CREATE TABLE IF NOT EXISTS transaction_otp_challenges (
+CREATE TABLE transaction_otp_challenges (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   transaction_id BIGINT UNSIGNED NOT NULL,
   user_id BIGINT UNSIGNED NOT NULL,
@@ -32,7 +38,7 @@ CREATE TABLE IF NOT EXISTS transaction_otp_challenges (
   INDEX(transaction_id), INDEX(user_id,created_at)
 );
 
-CREATE TABLE IF NOT EXISTS transaction_events (
+CREATE TABLE transaction_events (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   transaction_id BIGINT UNSIGNED NOT NULL,
   event_type VARCHAR(50) NOT NULL,
@@ -46,7 +52,7 @@ CREATE TABLE IF NOT EXISTS transaction_events (
   INDEX(transaction_id,created_at)
 );
 
-CREATE TABLE IF NOT EXISTS transfer_limits (
+CREATE TABLE transfer_limits (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT UNSIGNED NULL,
   daily_limit DECIMAL(19,4) NOT NULL DEFAULT 5000000,
@@ -58,11 +64,21 @@ CREATE TABLE IF NOT EXISTS transfer_limits (
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS account_balance_snapshots (
+CREATE TABLE account_balance_snapshots (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   account_id BIGINT UNSIGNED NOT NULL,
   balance DECIMAL(19,4) NOT NULL,
   snapshot_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE,
   INDEX(account_id,snapshot_at)
+);
+
+CREATE TABLE reconciliation_runs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  status ENUM('running','passed','failed') NOT NULL DEFAULT 'running',
+  accounts_checked INT UNSIGNED NOT NULL DEFAULT 0,
+  mismatches_found INT UNSIGNED NOT NULL DEFAULT 0,
+  started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP NULL,
+  details JSON NULL
 );
