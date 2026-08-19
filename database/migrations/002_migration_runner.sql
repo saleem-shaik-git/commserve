@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version VARCHAR(100) PRIMARY KEY,
+  description VARCHAR(255) NOT NULL,
+  checksum CHAR(64) NOT NULL,
+  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
