@@ -11,16 +11,49 @@ final class AdminOperationsService
         $limit=max(1,min(200,$limit));$where=[];$params=[];
         if($q!==''){ $where[]='(t.reference LIKE ? OR t.description LIKE ? OR u.email LIKE ? OR a.account_number LIKE ?)';$like='%'.$q.'%';array_push($params,$like,$like,$like,$like); }
         if($status!==''){ $where[]='t.status=?';$params[]=$status; }
-        $sql='SELECT t.*,u.email,a.account_number FROM transactions t LEFT JOIN users u ON u.id=t.initiated_by LEFT JOIN ledger_entries le ON le.transaction_id=t.id LEFT JOIN accounts a ON a.id=le.account_id'.($where?' WHERE '.implode(' AND ',$where):'').' GROUP BY t.id ORDER BY t.id DESC LIMIT '.$limit;
+        $sql='SELECT t.reference,t.type,t.status,t.amount,t.currency,t.description,t.created_at,t.completed_at,t.initiated_by,u.email,MAX(a.account_number) account_number FROM transactions t LEFT JOIN users u ON u.id=t.initiated_by LEFT JOIN ledger_entries le ON le.transaction_id=t.id LEFT JOIN accounts a ON a.id=le.account_id'.($where?' WHERE '.implode(' AND ',$where):'').' GROUP BY t.id,t.reference,t.type,t.status,t.amount,t.currency,t.description,t.created_at,t.completed_at,t.initiated_by,u.email ORDER BY t.id DESC LIMIT '.$limit;
         $stmt=$this->db->prepare($sql);$stmt->execute($params);return $stmt->fetchAll();
     }
 
+    public function transaction(string $reference): ?array
+    {
+        $stmt=$this->db->prepare('SELECT t.*,u.email FROM transactions t LEFT JOIN users u ON u.id=t.initiated_by WHERE t.reference=? LIMIT 1');$stmt->execute([$reference]);$t=$stmt->fetch();if(!$t)return null;
+        $stmt=$this->db->prepare('SELECT le.*,a.account_number,a.user_id FROM ledger_entries le JOIN accounts a ON a.id=le.account_id JOIN transactions t ON t.id=le.transaction_id WHERE t.reference=? ORDER BY le.id');$stmt->execute([$reference]);$t['ledger']=$stmt->fetchAll();
+        $stmt=$this->db->prepare('SELECT te.*,u.email FROM transaction_events te LEFT JOIN users u ON u.id=te.actor_user_id JOIN transactions t ON t.id=te.transaction_id WHERE t.reference=? ORDER BY te.id DESC');$stmt->execute([$reference]);$t['events']=$stmt->fetchAll();return $t;
+    }
+
+    public function reverse(string $reference,int $adminId,string $reason): string { return $this->adjustTransaction($reference,$adminId,$reason,'reversal'); }
+    public function refund(string $reference,int $adminId,string $reason): string { return $this->adjustTransaction($reference,$adminId,$reason,'refund'); }
+
+    private function adjustTransaction(string $reference,int $adminId,string $reason,string $operation): string
+    {
+        $reason=trim($reason);if($reason==='')throw new InvalidArgumentException('A reason is required.');
+        $this->db->beginTransaction();
+        try{
+            $stmt=$this->db->prepare('SELECT * FROM transactions WHERE reference=? FOR UPDATE');$stmt->execute([$reference]);$original=$stmt->fetch();if(!$original)throw new RuntimeException('Transaction not found.');
+            if($original['status']!=='completed')throw new RuntimeException('Only completed transactions can be '.$operation.'d.');
+            $field=$operation==='reversal'?'reversal_of_transaction_id':'refund_of_transaction_id';
+            if(!empty($original[$field]))throw new RuntimeException('This transaction has already been '.$operation.'d.');
+            $stmt=$this->db->prepare("SELECT le.*,a.status account_status FROM ledger_entries le JOIN accounts a ON a.id=le.account_id WHERE le.transaction_id=? ORDER BY le.id FOR UPDATE");$stmt->execute([(int)$original['id']]);$entries=$stmt->fetchAll();if(count($entries)<1)throw new RuntimeException('Transaction has no ledger entries.');
+            $accountIds=array_map(fn($e)=>(int)$e['account_id'],$entries);sort($accountIds,SORT_NUMERIC);foreach($accountIds as $id){$lock=$this->db->prepare('SELECT id,status FROM accounts WHERE id=? FOR UPDATE');$lock->execute([$id]);$a=$lock->fetch();if(!$a||$a['status']!=='active')throw new RuntimeException('All affected accounts must be active.');}
+            $newRef=strtoupper($operation).'-'.date('YmdHis').'-'.strtoupper(bin2hex(random_bytes(4)));
+            $stmt=$this->db->prepare("INSERT INTO transactions(reference,type,status,amount,currency,description,initiated_by,$field) VALUES(?,?,\"processing\",?,?,?,?,?)");$stmt->execute([$newRef,$operation,$original['amount'],$original['currency'],ucfirst($operation).' of '.$reference.': '.$reason,$adminId,(int)$original['id']]);
+            $newId=(int)$this->db->lastInsertId();
+            foreach($entries as $e){$inverse=$e['entry_type']==='credit'?'debit':'credit';$this->db->prepare('INSERT INTO ledger_entries(transaction_id,account_id,entry_type,amount) VALUES(?,?,?,?)')->execute([$newId,(int)$e['account_id'],$inverse,$e['amount']]);}
+            $this->db->prepare('UPDATE transactions SET status="completed",completed_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$newId]);
+            $this->db->prepare("UPDATE transactions SET $field=? WHERE id=?")->execute([$newId,(int)$original['id']]);
+            $this->db->prepare('UPDATE transactions SET status=? WHERE id=?')->execute([$operation==='reversal'?'reversed':'refunded',(int)$original['id']]);
+            foreach($accountIds as $id){$stmt=$this->db->prepare('SELECT COALESCE(SUM(CASE WHEN le.entry_type="credit" THEN le.amount ELSE -le.amount END),0) FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? AND t.status="completed"');$stmt->execute([$id]);$balance=number_format((float)$stmt->fetchColumn(),4,'.','');$this->db->prepare('UPDATE accounts SET available_balance=? WHERE id=?')->execute([$balance,$id]);}
+            $this->recordEventById((int)$original['id'],$operation.'_completed','completed',$operation.'d',$adminId,$reason);$this->recordEventById($newId,$operation.'_created','processing','completed',$adminId,$reason);
+            $this->db->commit();return $newRef;
+        }catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}
+    }
+
     public function customerSearch(string $q='',int $limit=100):array{$limit=max(1,min(200,$limit));$stmt=$this->db->prepare('SELECT u.id,u.first_name,u.last_name,u.email,u.status,r.name role,COUNT(DISTINCT a.id) accounts,COALESCE(SUM(a.available_balance),0) balance FROM users u LEFT JOIN roles r ON r.id=u.role_id LEFT JOIN accounts a ON a.user_id=u.id WHERE (u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ?) GROUP BY u.id ORDER BY u.id DESC LIMIT '.$limit);$like='%'.$q.'%';$stmt->execute([$like,$like,$like]);return $stmt->fetchAll();}
-
     public function setCustomerStatus(int $userId,string $status):void{if(!in_array($status,['active','suspended','locked'],true))throw new InvalidArgumentException('Invalid customer status.');$stmt=$this->db->prepare('UPDATE users SET status=? WHERE id=? AND role_id=(SELECT id FROM roles WHERE name="customer")');$stmt->execute([$status,$userId]);if($stmt->rowCount()===0)throw new RuntimeException('Customer not found or unchanged.');}
-
+    public function accounts(string $q='',int $limit=200):array{$limit=max(1,min(500,$limit));$like='%'.$q.'%';$stmt=$this->db->prepare('SELECT a.id,a.account_number,a.available_balance,a.status,at.name account_type,at.currency,u.id user_id,u.first_name,u.last_name,u.email FROM accounts a JOIN account_types at ON at.id=a.account_type_id JOIN users u ON u.id=a.user_id WHERE a.account_number LIKE ? OR u.email LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? ORDER BY a.id DESC LIMIT '.$limit);$stmt->execute([$like,$like,$like,$like]);return $stmt->fetchAll();}
     public function setAccountStatus(int $accountId,string $status):void{if(!in_array($status,['active','blocked','closed'],true))throw new InvalidArgumentException('Invalid account status.');$stmt=$this->db->prepare('UPDATE accounts SET status=? WHERE id=?');$stmt->execute([$status,$accountId]);if($stmt->rowCount()===0)throw new RuntimeException('Account not found or unchanged.');}
-
     public function latestReconciliation():?array{$stmt=$this->db->query('SELECT * FROM reconciliation_runs ORDER BY id DESC LIMIT 1');return $stmt->fetch()?:null;}
     public function recentAuditEvents(int $limit=100):array{$limit=max(1,min(200,$limit));$stmt=$this->db->query('SELECT te.*,t.reference,u.email FROM transaction_events te JOIN transactions t ON t.id=te.transaction_id LEFT JOIN users u ON u.id=te.actor_user_id ORDER BY te.id DESC LIMIT '.$limit);return $stmt->fetchAll();}
+    private function recordEventById(int $transactionId,string $type,string $old,string $new,int $actor,string $reason):void{$this->db->prepare('INSERT INTO transaction_events(transaction_id,event_type,old_status,new_status,actor_user_id,metadata) VALUES(?,?,?,?,?,?)')->execute([$transactionId,$type,$old,$new,$actor,json_encode(['reason'=>$reason],JSON_THROW_ON_ERROR)]);}
 }
