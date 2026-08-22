@@ -1,7 +1,202 @@
 <?php
 require_once dirname(__DIR__) . '/app/helpers.php';
+require_once dirname(__DIR__) . '/app/Services/AccountService.php';
 require_auth();
-if ($_SERVER['REQUEST_METHOD']==='POST') { verify_csrf(); $_SESSION=[]; session_destroy(); redirect('/commserve/public/login.php'); }
-$user=auth_user();$db=Database::connection();
-$stmt=$db->prepare('SELECT a.*, t.name AS type, t.currency FROM accounts a JOIN account_types t ON t.id=a.account_type_id WHERE a.user_id=? ORDER BY a.id');$stmt->execute([$user['id']]);$accounts=$stmt->fetchAll();$total=array_sum(array_map(fn($a)=>(float)$a['available_balance'],$accounts));
-?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard - <?=e(APP_NAME)?></title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"><link href="/commserve/public/assets/css/app.css" rel="stylesheet"></head><body><nav class="navbar navbar-expand-lg bg-white border-bottom"><div class="container-fluid"><a class="navbar-brand fw-bold" href="/commserve/public/dashboard.php">CommServe</a><span class="badge text-bg-warning ms-2">DEMO</span><div class="ms-auto d-flex align-items-center gap-3"><span class="text-muted">Hi, <?=e($user['name'])?></span><form method="post" class="m-0"><?=csrf_field()?><button class="btn btn-outline-secondary btn-sm">Logout</button></form></div></nav><div class="container-fluid"><div class="row"><aside class="col-lg-2 sidebar p-3"><a class="nav-link active" href="/commserve/public/dashboard.php"><i class="bi bi-grid me-2"></i>Dashboard</a><a class="nav-link" href="#"><i class="bi bi-wallet2 me-2"></i>Accounts</a><a class="nav-link" href="/commserve/public/transfer.php"><i class="bi bi-send me-2"></i>Transfer</a><a class="nav-link" href="/commserve/public/transactions.php"><i class="bi bi-receipt me-2"></i>Transactions</a><a class="nav-link" href="/commserve/public/beneficiaries.php"><i class="bi bi-person-lines-fill me-2"></i>Beneficiaries</a><a class="nav-link" href="/commserve/public/transaction-pin.php"><i class="bi bi-shield-lock me-2"></i>Transaction PIN</a><a class="nav-link" href="#"><i class="bi bi-credit-card me-2"></i>Cards</a><a class="nav-link" href="#"><i class="bi bi-file-earmark-text me-2"></i>Statements</a></aside><main class="col-lg-10 p-4"><div class="alert alert-info border-0"><i class="bi bi-info-circle me-2"></i>This is a simulated banking environment. No real funds are processed.</div><h2 class="fw-bold">Welcome back, <?=e($user['name'])?></h2><div class="row g-4 mt-1"><div class="col-md-7"><div class="card hero-card border-0 shadow-sm"><div class="card-body p-4"><div class="text-white-50">Total simulated balance</div><div class="display-5 fw-bold text-white mt-2">₦<?=number_format($total,2)?></div><div class="mt-4"><a class="btn btn-light me-2" href="/commserve/public/transfer.php"><i class="bi bi-send me-1"></i>Transfer</a><a class="btn btn-outline-light" href="/commserve/public/transactions.php">Transactions</a></div></div></div></div><div class="col-md-5"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h6 class="text-muted">Customer status</h6><div class="d-flex justify-content-between mt-3"><span>KYC</span><span class="badge text-bg-warning">Pending</span></div><div class="d-flex justify-content-between mt-3"><span>Account</span><span class="badge text-bg-success">Active</span></div><a href="/commserve/public/transaction-pin.php" class="btn btn-sm btn-outline-primary mt-4">Manage transaction PIN</a></div></div></div></div><h5 class="fw-bold mt-5">Your accounts</h5><div class="row g-3"><?php foreach($accounts as $a):?><div class="col-md-6 col-xl-4"><div class="card border-0 shadow-sm"><div class="card-body"><div class="d-flex justify-content-between"><span class="text-muted"><?=e($a['type'])?></span><i class="bi bi-wallet2 text-primary"></i></div><h4 class="mt-3">₦<?=number_format((float)$a['available_balance'],2)?></h4><div class="small text-muted">****<?=e(substr($a['account_number'],-4))?> · <?=e($a['currency'])?></div><a href="/commserve/public/transactions.php?account=<?=$a['id']?>" class="btn btn-sm btn-outline-secondary mt-3">View transactions</a></div></div></div><?php endforeach;?></div></main></div></div></body></html>
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
+    $_SESSION = [];
+    session_destroy();
+    redirect('/commserve/public/login.php');
+}
+
+$user = auth_user();
+$db = Database::connection();
+$accountService = new AccountService($db);
+
+$accountsData = $accountService->getSavingsAndCurrent((int)$user['id']);
+$accounts = $accountsData['all'];
+$savings = $accountsData['savings'];
+$current = $accountsData['current'];
+
+$totalBalance = $accountService->getTotalBalance((int)$user['id']);
+$availableBalance = $accountService->getAvailableBalance((int)$user['id']);
+$recent = $accountService->getRecentTransactions((int)$user['id'], 8);
+$pending = $accountService->getPendingTransactions((int)$user['id'], 5);
+
+$pageTitle = 'Dashboard';
+$currentPage = 'dashboard';
+$totalBalance = $totalBalance; // for sidebar
+require __DIR__ . '/partials/header.php';
+require __DIR__ . '/partials/sidebar.php';
+?>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1">Welcome back, <?= e(explode(' ', $user['name'] ?? 'Customer')[0]) ?> 👋</h2>
+    <p class="text-muted mb-0">Here's your simulated banking overview. No real funds are processed.</p>
+  </div>
+  <div class="d-flex gap-2 mt-3 mt-md-0">
+    <a href="/commserve/public/transfer.php" class="btn btn-primary"><i class="bi bi-send me-2"></i>Transfer</a>
+    <a href="/commserve/public/statements.php" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-arrow-down me-2"></i>Statement</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card hero-card border-0 text-white h-100">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start">
+          <div><div class="text-white-50 small">Total Balance</div><div class="display-6 fw-bold mt-1">₦<?= number_format($totalBalance, 2) ?></div></div>
+          <span class="badge bg-white text-primary">NGN</span>
+        </div>
+        <div class="mt-4 d-flex gap-3 small">
+          <span><i class="bi bi-wallet2 me-1"></i><?= count($accounts) ?> account(s)</span>
+          <span><i class="bi bi-shield-check me-1"></i>Ledger-backed</span>
+        </div>
+        <div class="mt-3">
+          <a href="/commserve/public/accounts.php" class="btn btn-light btn-sm">Manage accounts</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card hero-card-dark border-0 text-white h-100">
+      <div class="card-body p-4">
+        <div class="text-white-50 small">Available Balance</div>
+        <div class="display-6 fw-bold mt-1">₦<?= number_format($availableBalance, 2) ?></div>
+        <div class="mt-3 small text-white-50">Funds available for transfers and withdrawals</div>
+        <div class="mt-3">
+          <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Active</span>
+          <span class="badge bg-white bg-opacity-25 ms-2">KYC Pending</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body p-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Account Mix</h6>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span><span class="badge bg-primary me-2"> </span>Savings</span>
+          <span class="fw-semibold"><?= count($savings) ?> · ₦<?= number_format(array_sum(array_map(fn($a)=>(float)$a['available_balance'],$savings)),2) ?></span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span><span class="badge bg-dark me-2"> </span>Current</span>
+          <span class="fw-semibold"><?= count($current) ?> · ₦<?= number_format(array_sum(array_map(fn($a)=>(float)$a['available_balance'],$current)),2) ?></span>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between small text-muted">
+          <span>Pending transfers</span><span class="badge text-bg-warning"><?= count($pending) ?></span>
+        </div>
+        <div class="d-flex justify-content-between small text-muted mt-2">
+          <span>Recent transactions</span><span class="badge text-bg-secondary"><?= count($recent) ?></span>
+        </div>
+        <a href="/commserve/public/transaction-pin.php" class="btn btn-outline-primary btn-sm w-100 mt-3"><i class="bi bi-shield-lock me-1"></i>Manage PIN & Security</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0">Your Accounts</h5>
+      <a href="/commserve/public/accounts.php" class="btn btn-sm btn-outline-secondary">View all</a>
+    </div>
+    <div class="row g-3">
+      <?php foreach ($accounts as $a): ?>
+      <div class="col-md-6">
+        <div class="card account-card h-100">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="small text-muted text-uppercase fw-semibold"><?= e($a['type_name']) ?></div>
+                <div class="account-number fw-bold mt-1">****<?= e(substr($a['account_number'],-4)) ?> · <?= e($a['account_number']) ?></div>
+              </div>
+              <div class="bg-light rounded-3 p-2"><i class="bi bi-<?= strtolower($a['type_name'])==='savings'?'piggy-bank':'wallet2' ?> text-primary fs-5"></i></div>
+            </div>
+            <h4 class="fw-bold mt-3">₦<?= number_format((float)$a['available_balance'],2) ?></h4>
+            <div class="small text-muted"><?= e($a['currency']) ?> · <?= e(ucfirst($a['status'])) ?></div>
+            <div class="d-flex gap-2 mt-3">
+              <a href="/commserve/public/account.php?id=<?= $a['id'] ?>" class="btn btn-sm btn-primary">Details</a>
+              <a href="/commserve/public/transactions.php?account=<?= $a['id'] ?>" class="btn btn-sm btn-outline-secondary">History</a>
+              <a href="/commserve/public/statements.php?account=<?= $a['id'] ?>" class="btn btn-sm btn-outline-secondary">Statement</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+      <?php if (empty($accounts)): ?>
+        <div class="col-12"><div class="alert alert-info">No accounts found. Contact support.</div></div>
+      <?php endif; ?>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2"></i>Recent Transactions</h6>
+        <a href="/commserve/public/transactions.php" class="btn btn-sm btn-outline-primary">View all</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light"><tr><th>Date</th><th>Account</th><th>Type</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+          <?php if (!$recent): ?><tr><td colspan="6" class="text-center text-muted py-4">No transactions yet. Try a demo transfer.</td></tr>
+          <?php else: foreach ($recent as $r): ?>
+            <tr>
+              <td class="small"><?= e(date('M d, Y', strtotime($r['created_at']))) ?><br><span class="text-muted"><?= e(date('h:i A', strtotime($r['created_at']))) ?></span></td>
+              <td class="small"><span class="badge text-bg-light border"><?= e($r['account_type']) ?></span><br>****<?= e(substr($r['account_number'],-4)) ?></td>
+              <td><span class="badge <?= $r['entry_type']==='credit'?'text-bg-success':'text-bg-danger' ?>"><?= e(ucfirst($r['entry_type'])) ?></span><br><small class="text-muted"><?= e($r['type']) ?></small></td>
+              <td class="small" style="max-width:200px"><a href="/commserve/public/transaction.php?ref=<?= urlencode($r['reference']) ?>" class="text-decoration-none fw-semibold"><?= e($r['reference']) ?></a><br><?= e(substr($r['description']??'',0,40)) ?></td>
+              <td class="fw-bold">₦<?= number_format((float)$r['amount'],2) ?></td>
+              <td><span class="badge text-bg-success"><?= e(ucfirst($r['status'])) ?></span></td>
+            </tr>
+          <?php endforeach; endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white"><h6 class="fw-bold mb-0"><i class="bi bi-hourglass-split me-2 text-warning"></i>Pending Transactions</h6></div>
+      <div class="card-body">
+        <?php if (!$pending): ?>
+          <div class="text-center py-4"><i class="bi bi-check-circle text-success fs-1"></i><p class="text-muted mt-2 mb-0">No pending transfers. All clear!</p></div>
+        <?php else: foreach ($pending as $p): ?>
+          <div class="border rounded-3 p-3 mb-3">
+            <div class="d-flex justify-content-between"><span class="fw-semibold small"><?= e($p['reference']) ?></span><span class="badge text-bg-warning"><?= e($p['status']) ?></span></div>
+            <div class="small text-muted mt-1"><?= e($p['description']) ?> · ₦<?= number_format((float)$p['amount'],2) ?></div>
+            <div class="small mt-2">From <?= e($p['from_account_number']??'...') ?> → To <?= e($p['to_account_number']??'...') ?></div>
+            <a href="/commserve/public/transfer-confirm.php?ref=<?= urlencode($p['reference']) ?>" class="btn btn-sm btn-primary w-100 mt-2">Confirm with OTP</a>
+          </div>
+        <?php endforeach; endif; ?>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white"><h6 class="fw-bold mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h6></div>
+      <div class="card-body d-grid gap-2">
+        <a href="/commserve/public/transfer.php?type=own" class="btn btn-outline-primary text-start"><i class="bi bi-arrow-left-right me-2"></i>Own-account transfer</a>
+        <a href="/commserve/public/transfer.php?type=beneficiary" class="btn btn-outline-primary text-start"><i class="bi bi-person-check me-2"></i>Send to beneficiary</a>
+        <a href="/commserve/public/transfer.php?type=other" class="btn btn-outline-primary text-start"><i class="bi bi-bank me-2"></i>Other CommServe account</a>
+        <a href="/commserve/public/beneficiaries.php" class="btn btn-outline-secondary text-start"><i class="bi bi-person-plus me-2"></i>Add beneficiary</a>
+        <a href="/commserve/public/statements.php" class="btn btn-outline-secondary text-start"><i class="bi bi-file-earmark-arrow-down me-2"></i>Download statement</a>
+      </div>
+    </div>
+
+    <div class="card border-0 bg-primary text-white">
+      <div class="card-body p-4">
+        <h6 class="fw-bold"><i class="bi bi-shield-lock me-2"></i>Security Tips</h6>
+        <ul class="small mb-0 ps-3">
+          <li>Never share your Transaction PIN or OTP</li>
+          <li>Always verify account numbers before confirming</li>
+          <li>Use idempotency keys for safe retries</li>
+          <li>All actions are ledger-backed and audited</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<?php require __DIR__ . '/partials/footer.php'; ?>

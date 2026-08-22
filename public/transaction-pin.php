@@ -1,7 +1,98 @@
 <?php
 require_once dirname(__DIR__) . '/app/helpers.php';
 require_once dirname(__DIR__) . '/app/Services/SecurityService.php';
+require_once dirname(__DIR__) . '/app/Services/AccountService.php';
 require_auth();
-$user=auth_user();$svc=new SecurityService(Database::connection());$error=null;$success=null;
-if($_SERVER['REQUEST_METHOD']==='POST'){try{verify_csrf();$pin=(string)($_POST['pin']??'');$confirm=(string)($_POST['confirm_pin']??'');if($pin!==$confirm)throw new RuntimeException('PIN confirmation does not match.');$svc->setTransactionPin((int)$user['id'],$pin);$success='Transaction PIN saved successfully.';}catch(Throwable $e){$error=$e->getMessage();}}
-?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Transaction PIN - <?=e(APP_NAME)?></title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><main class="container py-5" style="max-width:520px"><a href="/commserve/public/dashboard.php">← Dashboard</a><div class="card border-0 shadow-sm mt-4"><div class="card-body p-4"><h3>Transaction PIN</h3><p class="text-muted">Set the PIN used to authorize simulated transfers.</p><?php if($error):?><div class="alert alert-danger"><?=e($error)?></div><?php endif;?><?php if($success):?><div class="alert alert-success"><?=e($success)?></div><?php endif;?><form method="post"><?=csrf_field()?><label class="form-label">New PIN</label><input class="form-control mb-3" name="pin" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" minlength="4" required><label class="form-label">Confirm PIN</label><input class="form-control mb-3" name="confirm_pin" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" minlength="4" required><button class="btn btn-primary">Save PIN</button></form></div></div></main></body></html>
+$user = auth_user();
+$db = Database::connection();
+$svc = new SecurityService($db);
+$accountService = new AccountService($db);
+
+$error = null;
+$success = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        verify_csrf();
+        $pin = (string)($_POST['pin'] ?? '');
+        $confirm = (string)($_POST['confirm_pin'] ?? '');
+        if ($pin !== $confirm) throw new RuntimeException('PIN confirmation does not match.');
+        $svc->setTransactionPin((int)$user['id'], $pin);
+        $success = 'Transaction PIN saved successfully. You can now authorize transfers.';
+    } catch (Throwable $e) {
+        $error = $e->getMessage();
+    }
+}
+
+$stmt = $db->prepare('SELECT transaction_pin_hash FROM users WHERE id=?');
+$stmt->execute([(int)$user['id']]);
+$hasPin = (bool)$stmt->fetchColumn();
+
+$totalBalance = $accountService->getTotalBalance((int)$user['id']);
+$pageTitle = 'Transaction PIN';
+$currentPage = 'pin';
+require __DIR__ . '/partials/header.php';
+require __DIR__ . '/partials/sidebar.php';
+?>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div><h3 class="fw-bold mb-1"><i class="bi bi-shield-lock me-2"></i>Transaction PIN</h3><p class="text-muted mb-0">Secure your transfers with a 4-6 digit PIN + OTP.</p></div>
+      <span class="badge <?= $hasPin?'text-bg-success':'text-bg-warning' ?>"><?= $hasPin?'PIN SET':'NOT SET' ?></span>
+    </div>
+
+    <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
+    <?php if ($success): ?><div class="alert alert-success"><?= e($success) ?></div><?php endif; ?>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4">
+            <h5 class="fw-bold">Set / Update PIN</h5><p class="text-muted small">Used to authorize all transfers. Keep it secret, never share OTP.</p>
+            <form method="post" class="mt-3">
+              <?= csrf_field() ?>
+              <div class="mb-3"><label class="form-label">New PIN (4-6 digits)</label><input class="form-control form-control-lg" name="pin" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" minlength="4" placeholder="••••" required></div>
+              <div class="mb-3"><label class="form-label">Confirm PIN</label><input class="form-control form-control-lg" name="confirm_pin" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" minlength="4" placeholder="••••" required></div>
+              <button class="btn btn-primary w-100 py-2"><i class="bi bi-shield-check me-2"></i>Save PIN</button>
+            </form>
+            <hr><div class="small text-muted"><i class="bi bi-info-circle me-1"></i>PIN is hashed with bcrypt. OTP is additional layer — 6 digits, 10 min expiry, 5 attempts max.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header bg-white fw-bold"><i class="bi bi-shield-check me-2"></i>Security Status</div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-3"><span>Transaction PIN</span><span class="badge <?= $hasPin?'text-bg-success':'text-bg-danger' ?>"><?= $hasPin?'Active':'Not Set' ?></span></div>
+            <div class="d-flex justify-content-between mb-3"><span>OTP Verification</span><span class="badge text-bg-success">Enabled</span></div>
+            <div class="d-flex justify-content-between mb-3"><span>Ledger Protection</span><span class="badge text-bg-success">Active</span></div>
+            <div class="d-flex justify-content-between"><span>Session Security</span><span class="badge text-bg-success">HttpOnly • Lax</span></div>
+          </div>
+        </div>
+
+        <div class="card border-0 bg-primary text-white">
+          <div class="card-body p-4">
+            <h6 class="fw-bold"><i class="bi bi-lightbulb me-2"></i>Tips</h6>
+            <ul class="small mb-0">
+              <li>Choose a PIN you can remember but others can't guess</li>
+              <li>Never use 1234, 0000, or your birth year</li>
+              <li>OTP expires in 10 minutes — request new if expired</li>
+              <li>All PIN changes are audited</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+          <div class="card-body p-3 text-center">
+            <div class="small text-muted mb-2">Need help?</div>
+            <a href="/commserve/public/transfer.php" class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-send me-1"></i>Test Transfer Flow</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<?php require __DIR__ . '/partials/footer.php'; ?>
