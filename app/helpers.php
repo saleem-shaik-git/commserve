@@ -14,3 +14,6 @@ function verify_csrf(): void { if (!hash_equals($_SESSION['_csrf'] ?? '', $_POST
 function auth_user(): ?array { return $_SESSION['user'] ?? null; }
 function require_auth(): void { if (!auth_user()) redirect('/commserve/public/login.php'); }
 function require_role(string $role): void { require_auth(); if ((auth_user()['role'] ?? '') !== $role) { http_response_code(403); exit('Forbidden'); } }
+function format_money(float|string $amount, string $currency='NGN'): string { return $currency.' '.number_format((float)$amount,2); }
+function format_date(?string $date, string $fmt='M d, Y'): string { if(!$date) return '-'; $ts=strtotime($date); return $ts?date($fmt,$ts):$date; }
+function money_color(string $entryType): string { return $entryType==='credit'?'text-success':'text-danger'; }
