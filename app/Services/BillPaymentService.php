@@ -9,7 +9,19 @@ final class BillPaymentService
     private SecurityService $security;
     public function __construct(private PDO $db){$this->security=new SecurityService($db);}
 
-    public function billers(?string $category=null):array{$sql='SELECT * FROM billers WHERE status="active"';$params=[];if($category){$sql.=' AND category=?';$params[]=$category;}$sql.=' ORDER BY category,name';$s=$this->db->prepare($sql);$s->execute($params);return $s->fetchAll();}
+    public function billers(?string $category=null):array{
+        try {
+            $sql='SELECT * FROM billers WHERE status="active"';$params=[];
+            if($category){$sql.=' AND category=?';$params[]=$category;}
+            $sql.=' ORDER BY category,name';
+            $s=$this->db->prepare($sql);$s->execute($params);return $s->fetchAll();
+        } catch (PDOException $e) {
+            if (($e->errorInfo[1] ?? null) === 1146) {
+                throw new RuntimeException('Bill payment tables are not installed. Refresh the page to apply pending migrations, or run: php database/migrate.php');
+            }
+            throw $e;
+        }
+    }
 
     public function initiate(int $userId,int $accountId,int $billerId,string $customerReference,string $amount,string $pin,?string $idempotencyKey=null):array{
         $amount=trim($amount);$customerReference=trim($customerReference);

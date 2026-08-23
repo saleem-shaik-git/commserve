@@ -1,5 +1,4 @@
--- Phase 5: billers, bill payments and scheduled payments.
--- Do not re-add beneficiaries.status / updated_at (already added in 001).
+-- Safety net: create Phase 5 payment tables if an earlier migration was skipped or rolled back.
 
 ALTER TABLE transactions MODIFY type ENUM('deposit','withdrawal','transfer','fee','refund','reversal','bill_payment') NOT NULL;
 
@@ -20,9 +19,11 @@ CREATE TABLE IF NOT EXISTS bill_payments (
   biller_id BIGINT UNSIGNED NOT NULL,
   transaction_id BIGINT UNSIGNED NULL,
   customer_reference VARCHAR(120) NOT NULL,
+  provider_reference VARCHAR(120) NULL,
   amount DECIMAL(19,4) NOT NULL,
   currency CHAR(3) NOT NULL,
   status ENUM('pending','completed','failed','cancelled') NOT NULL DEFAULT 'pending',
+  failure_reason VARCHAR(255) NULL,
   idempotency_key VARCHAR(100) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   completed_at TIMESTAMP NULL,
@@ -45,7 +46,9 @@ CREATE TABLE IF NOT EXISTS scheduled_payments (
   currency CHAR(3) NOT NULL,
   frequency ENUM('once','daily','weekly','monthly') NOT NULL,
   next_run_at DATETIME NOT NULL,
-  status ENUM('active','paused','cancelled','completed') NOT NULL DEFAULT 'active',
+  last_run_at DATETIME NULL,
+  last_error VARCHAR(500) NULL,
+  status ENUM('active','paused','cancelled','processing','completed') NOT NULL DEFAULT 'active',
   description VARCHAR(255) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
