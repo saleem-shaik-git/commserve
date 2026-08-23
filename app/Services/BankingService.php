@@ -3,14 +3,17 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/SecurityService.php';
+require_once __DIR__ . '/ComplianceRiskService.php';
 
 final class BankingService
 {
     private SecurityService $security;
+    private ComplianceRiskService $compliance;
 
     public function __construct(private PDO $db)
     {
         $this->security = new SecurityService($db);
+        $this->compliance = new ComplianceRiskService($db);
     }
 
     public function deposit(int $accountId,string $amount,string $description='Simulated deposit',?int $actorUserId=null,?string $idempotencyKey=null):string
@@ -18,69 +21,32 @@ final class BankingService
 
     public function withdraw(int $accountId,string $amount,string $description='Simulated withdrawal',?int $actorUserId=null,?string $idempotencyKey=null):string
     {
-        $this->assertPositiveAmount($amount);
-        $this->db->beginTransaction();
+        $this->assertPositiveAmount($amount);$this->db->beginTransaction();
         try {
             if($idempotencyKey!==null && ($existing=$this->security->assertIdempotency($idempotencyKey))){$this->db->rollBack();return $existing;}
-            $account=$this->lockAccount($accountId);
-            if($account['status']!=='active')throw new RuntimeException('Account is not active.');
+            $account=$this->lockAccount($accountId);if($account['status']!=='active')throw new RuntimeException('Account is not active.');
             if((float)$account['available_balance']<(float)$amount)throw new RuntimeException('Insufficient funds.');
             $reference=$this->createTransaction('withdrawal',$amount,$account['currency'],$description,$actorUserId,$idempotencyKey);
             $this->addLedgerEntry($reference,$accountId,'debit',$amount);$this->completeTransaction($reference);$this->recalculateBalance($accountId);$this->db->commit();return $reference;
-        } catch(Throwable $e) {
-            if($this->db->inTransaction())$this->db->rollBack();
-            if($idempotencyKey!==null && $this->isDuplicateKey($e)){ $existing=$this->security->assertIdempotency($idempotencyKey);if($existing)return $existing; }
-            throw $e;
-        }
+        } catch(Throwable $e) {if($this->db->inTransaction())$this->db->rollBack();if($idempotencyKey!==null&&$this->isDuplicateKey($e)){ $existing=$this->security->assertIdempotency($idempotencyKey);if($existing)return $existing;}throw $e;}
     }
 
     public function transfer(int $fromAccountId,int $toAccountId,string $amount,string $description='Internal transfer',?int $userId=null,?string $transactionPin=null,?string $idempotencyKey=null):string
     {
-        $this->assertPositiveAmount($amount);
-        if($fromAccountId===$toAccountId)throw new RuntimeException('Source and destination accounts must differ.');
-        if($userId===null)throw new RuntimeException('Authenticated user is required for transfers.');
-        if($idempotencyKey!==null && ($existing=$this->security->assertIdempotency($idempotencyKey)))return $existing;
-        $this->security->verifyTransactionPin($userId,(string)$transactionPin);
-
+        $this->assertPositiveAmount($amount);if($fromAccountId===$toAccountId)throw new RuntimeException('Source and destination accounts must differ.');if($userId===null)throw new RuntimeException('Authenticated user is required for transfers.');if($idempotencyKey!==null&&($existing=$this->security->assertIdempotency($idempotencyKey)))return $existing;$this->security->verifyTransactionPin($userId,(string)$transactionPin);
+        // Phase 7 compliance gate runs before the ledger transaction is created.
+        $this->compliance->enforce($userId,$amount,'NGN');
         $this->db->beginTransaction();
         try {
-            $ids=[$fromAccountId,$toAccountId];sort($ids,SORT_NUMERIC);
-            $first=$this->lockAccount($ids[0]);$second=$this->lockAccount($ids[1]);
-            $from=$fromAccountId===(int)$first['id']?$first:$second;
-            $to=$toAccountId===(int)$first['id']?$first:$second;
-            if((int)$from['user_id']!==$userId)throw new RuntimeException('Source account does not belong to the authenticated user.');
-            if($from['status']!=='active'||$to['status']!=='active')throw new RuntimeException('Both accounts must be active.');
-            if($from['currency']!==$to['currency'])throw new RuntimeException('Currency mismatch.');
-            $this->security->assertTransferAllowed($userId,$amount,$from['currency']);
-            if((float)$from['available_balance']<(float)$amount)throw new RuntimeException('Insufficient funds.');
-            $reference=$this->createTransaction('transfer',$amount,$from['currency'],$description,$userId,$idempotencyKey);
-            $this->addLedgerEntry($reference,$fromAccountId,'debit',$amount);$this->addLedgerEntry($reference,$toAccountId,'credit',$amount);
-            $this->completeTransaction($reference);$this->recalculateBalance($fromAccountId);$this->recalculateBalance($toAccountId);$this->recordEvent($reference,'transfer_completed','processing','completed',$userId);
-            $this->db->commit();return $reference;
-        } catch(Throwable $e) {
-            if($this->db->inTransaction())$this->db->rollBack();
-            if($idempotencyKey!==null && $this->isDuplicateKey($e)){ $existing=$this->security->assertIdempotency($idempotencyKey);if($existing)return $existing; }
-            throw $e;
-        }
+            $ids=[$fromAccountId,$toAccountId];sort($ids,SORT_NUMERIC);$first=$this->lockAccount($ids[0]);$second=$this->lockAccount($ids[1]);$from=$fromAccountId===(int)$first['id']?$first:$second;$to=$toAccountId===(int)$first['id']?$first:$second;
+            if((int)$from['user_id']!==$userId)throw new RuntimeException('Source account does not belong to the authenticated user.');if($from['status']!=='active'||$to['status']!=='active')throw new RuntimeException('Both accounts must be active.');if($from['currency']!==$to['currency'])throw new RuntimeException('Currency mismatch.');$this->security->assertTransferAllowed($userId,$amount,$from['currency']);if((float)$from['available_balance']<(float)$amount)throw new RuntimeException('Insufficient funds.');
+            $reference=$this->createTransaction('transfer',$amount,$from['currency'],$description,$userId,$idempotencyKey);$this->addLedgerEntry($reference,$fromAccountId,'debit',$amount);$this->addLedgerEntry($reference,$toAccountId,'credit',$amount);$this->completeTransaction($reference);$this->recalculateBalance($fromAccountId);$this->recalculateBalance($toAccountId);$this->recordEvent($reference,'transfer_completed','processing','completed',$userId);$this->db->commit();return $reference;
+        } catch(Throwable $e) {if($this->db->inTransaction())$this->db->rollBack();if($idempotencyKey!==null&&$this->isDuplicateKey($e)){ $existing=$this->security->assertIdempotency($idempotencyKey);if($existing)return $existing;}throw $e;}
     }
 
-    public function balance(int $accountId):string
-    {
-        $stmt=$this->db->prepare('SELECT COALESCE(SUM(CASE WHEN le.entry_type="credit" THEN le.amount ELSE -le.amount END),0) FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? AND t.status="completed"');$stmt->execute([$accountId]);return number_format((float)$stmt->fetchColumn(),4,'.','');
-    }
-
-    public function transactionsForAccount(int $accountId,int $limit=50):array
-    {
-        $limit=max(1,min(200,$limit));$stmt=$this->db->prepare('SELECT t.reference,t.type,t.status,t.amount,t.currency,t.description,t.created_at,le.entry_type FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? ORDER BY t.id DESC LIMIT '.$limit);$stmt->execute([$accountId]);return $stmt->fetchAll();
-    }
-
-    private function singleAccountMovement(int $accountId,string $amount,string $type,string $entryType,string $description,?int $actorUserId,?string $idempotencyKey):string
-    {
-        $this->assertPositiveAmount($amount);$this->db->beginTransaction();
-        try{$account=$this->lockAccount($accountId);if($idempotencyKey!==null && ($existing=$this->security->assertIdempotency($idempotencyKey))){$this->db->rollBack();return $existing;}if($account['status']!=='active')throw new RuntimeException('Account is not active.');$reference=$this->createTransaction($type,$amount,$account['currency'],$description,$actorUserId,$idempotencyKey);$this->addLedgerEntry($reference,$accountId,$entryType,$amount);$this->completeTransaction($reference);$this->recalculateBalance($accountId);$this->db->commit();return $reference;}
-        catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();if($idempotencyKey!==null && $this->isDuplicateKey($e)){ $existing=$this->security->assertIdempotency($idempotencyKey);if($existing)return $existing;}throw $e;}
-    }
-
+    public function balance(int $accountId):string{$stmt=$this->db->prepare('SELECT COALESCE(SUM(CASE WHEN le.entry_type="credit" THEN le.amount ELSE -le.amount END),0) FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? AND t.status="completed"');$stmt->execute([$accountId]);return number_format((float)$stmt->fetchColumn(),4,'.','');}
+    public function transactionsForAccount(int $accountId,int $limit=50):array{$limit=max(1,min(200,$limit));$stmt=$this->db->prepare('SELECT t.reference,t.type,t.status,t.amount,t.currency,t.description,t.created_at,le.entry_type FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? ORDER BY t.id DESC LIMIT '.$limit);$stmt->execute([$accountId]);return $stmt->fetchAll();}
+    private function singleAccountMovement(int $accountId,string $amount,string $type,string $entryType,string $description,?int $actorUserId,?string $idempotencyKey):string{$this->assertPositiveAmount($amount);$this->db->beginTransaction();try{$account=$this->lockAccount($accountId);if($idempotencyKey!==null&&($existing=$this->security->assertIdempotency($idempotencyKey))){$this->db->rollBack();return $existing;}if($account['status']!=='active')throw new RuntimeException('Account is not active.');$reference=$this->createTransaction($type,$amount,$account['currency'],$description,$actorUserId,$idempotencyKey);$this->addLedgerEntry($reference,$accountId,$entryType,$amount);$this->completeTransaction($reference);$this->recalculateBalance($accountId);$this->db->commit();return $reference;}catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();if($idempotencyKey!==null&&$this->isDuplicateKey($e)){ $existing=$this->security->assertIdempotency($idempotencyKey);if($existing)return $existing;}throw $e;}}
     private function lockAccount(int $accountId):array{$stmt=$this->db->prepare('SELECT a.*,at.currency FROM accounts a JOIN account_types at ON at.id=a.account_type_id WHERE a.id=? FOR UPDATE');$stmt->execute([$accountId]);$account=$stmt->fetch();if(!$account)throw new RuntimeException('Account not found.');return $account;}
     private function createTransaction(string $type,string $amount,string $currency,string $description,?int $actorUserId,?string $idempotencyKey):string{$reference='TXN-'.date('YmdHis').'-'.strtoupper(bin2hex(random_bytes(4)));$stmt=$this->db->prepare('INSERT INTO transactions(reference,type,status,amount,currency,description,initiated_by,idempotency_key) VALUES(?,?,"processing",?,?,?,?,?)');$stmt->execute([$reference,$type,$amount,$currency,$description,$actorUserId,$idempotencyKey]);return $reference;}
     private function addLedgerEntry(string $reference,int $accountId,string $entryType,string $amount):void{$stmt=$this->db->prepare('SELECT id FROM transactions WHERE reference=?');$stmt->execute([$reference]);$transactionId=$stmt->fetchColumn();$this->db->prepare('INSERT INTO ledger_entries(transaction_id,account_id,entry_type,amount) VALUES(?,?,?,?)')->execute([$transactionId,$accountId,$entryType,$amount]);}
@@ -88,5 +54,5 @@ final class BankingService
     private function completeTransaction(string $reference):void{$this->db->prepare('UPDATE transactions SET status="completed",completed_at=CURRENT_TIMESTAMP WHERE reference=?')->execute([$reference]);}
     private function recordEvent(string $reference,string $type,string $old,string $new,int $actor):void{$stmt=$this->db->prepare('SELECT id FROM transactions WHERE reference=?');$stmt->execute([$reference]);$id=$stmt->fetchColumn();$this->db->prepare('INSERT INTO transaction_events(transaction_id,event_type,old_status,new_status,actor_user_id) VALUES(?,?,?,?,?)')->execute([$id,$type,$old,$new,$actor]);}
     private function assertPositiveAmount(string $amount):void{if(!preg_match('/^\d+(\.\d{1,4})?$/',$amount)||(float)$amount<=0)throw new InvalidArgumentException('Amount must be greater than zero.');}
-    private function isDuplicateKey(Throwable $e):bool{return $e instanceof PDOException && $e->getCode()==='23000' && str_contains(strtolower($e->getMessage()),'idempotency');}
+    private function isDuplicateKey(Throwable $e):bool{return $e instanceof PDOException&&$e->getCode()==='23000'&&str_contains(strtolower($e->getMessage()),'idempotency');}
 }

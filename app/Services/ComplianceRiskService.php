@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+final class ComplianceRiskService
+{
+    public function __construct(private PDO $db) {}
+
+    public function kyc(int $userId): array
+    {
+        $s=$this->db->prepare('SELECT * FROM customer_kyc WHERE user_id=?'); $s->execute([$userId]);
+        return $s->fetch() ?: ['user_id'=>$userId,'status'=>'pending'];
+    }
+
+    public function submitKyc(int $userId,array $data): void
+    {
+        $documentType=trim((string)($data['document_type']??''));
+        $documentReference=trim((string)($data['document_reference']??''));
+        $fullName=trim((string)($data['full_name']??''));
+        if($documentType===''||$documentReference===''||$fullName==='') throw new InvalidArgumentException('Document type, document reference and full name are required.');
+        $s=$this->db->prepare('INSERT INTO customer_kyc(user_id,status,document_type,document_reference,full_name,date_of_birth,phone,address,country,submitted_at) VALUES(?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE status="pending",document_type=VALUES(document_type),document_reference=VALUES(document_reference),full_name=VALUES(full_name),date_of_birth=VALUES(date_of_birth),phone=VALUES(phone),address=VALUES(address),country=VALUES(country),submitted_at=CURRENT_TIMESTAMP,reviewed_at=NULL,reviewed_by=NULL,review_notes=NULL');
+        $s->execute([$userId,'pending',$documentType,$documentReference,$fullName,$data['date_of_birth']??null,$data['phone']??null,$data['address']??null,$data['country']??null]);
+        $this->event($userId,'kyc_submitted','info','Customer submitted simulated KYC information.');
+    }
+
+    public function reviewKyc(int $kycId,int $adminId,string $status,string $notes=''): void
+    {
+        if(!in_array($status,['verified','rejected','requires_review'],true)) throw new InvalidArgumentException('Invalid KYC review status.');
+        $s=$this->db->prepare('SELECT user_id FROM customer_kyc WHERE id=?');$s->execute([$kycId]);$userId=$s->fetchColumn();if(!$userId)throw new RuntimeException('KYC record not found.');
+        $this->db->prepare('UPDATE customer_kyc SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=?,review_notes=? WHERE id=?')->execute([$status,$adminId,trim($notes)?:null,$kycId]);
+        $this->event((int)$userId,'kyc_reviewed',$status==='verified'?'info':'warning','KYC reviewed: '.$status,$adminId);
+    }
+
+    public function assess(int $userId,string $amount,string $currency='NGN',?int $transactionId=null): array
+    {
+        $amountFloat=(float)$amount; $alerts=[]; $score=0;
+        $kyc=$this->kyc($userId);
+        $rules=$this->db->query('SELECT * FROM risk_rules WHERE enabled=1')->fetchAll();
+        foreach($rules as $r){
+            $hit=false;$reason='';
+            if($r['rule_code']==='HIGH_VALUE_TRANSFER' && $amountFloat >= (float)$r['threshold_amount']){$hit=true;$reason='Amount meets or exceeds high-value threshold.';}
+            elseif($r['rule_code']==='VERY_HIGH_VALUE' && $amountFloat >= (float)$r['threshold_amount']){$hit=true;$reason='Amount meets or exceeds critical threshold.';}
+            elseif($r['rule_code']==='VELOCITY_10_TX_24H' || $r['rule_code']==='VELOCITY_20_TX_24H'){
+                $s=$this->db->prepare("SELECT COUNT(*) FROM transactions t WHERE t.initiated_by=? AND t.created_at >= (NOW() - INTERVAL 24 HOUR) AND t.status IN ('processing','completed') AND t.type IN ('transfer','withdrawal','bill_payment','card_payment','atm_withdrawal')");$s->execute([$userId]);$count=(int)$s->fetchColumn();$limit=$r['rule_code']==='VELOCITY_20_TX_24H'?20:10;if($count >= $limit){$hit=true;$reason='Outgoing transaction velocity exceeded '.$limit.' transactions in 24 hours.';}
+            } elseif($r['rule_code']==='NEW_ACCOUNT_ACTIVITY') {
+                $s=$this->db->prepare('SELECT MIN(created_at) FROM accounts WHERE user_id=?');$s->execute([$userId]);$created=$s->fetchColumn();if($created && strtotime((string)$created)>=time()-7*86400 && $amountFloat >= (float)$r['threshold_amount']){$hit=true;$reason='High-value activity on a newly opened account.';}
+            } elseif($r['rule_code']==='KYC_REQUIRED' && $kyc['status']!=='verified' && $amountFloat >= 500000){$hit=true;$reason='High-value transaction attempted before KYC verification.';}
+            if($hit){$score += $this->score($r['risk_level']);$alerts[]=['rule_code'=>$r['rule_code'],'risk_level'=>$r['risk_level'],'reason'=>$reason];}
+        }
+        $risk=$score>=90?'critical':($score>=60?'high':($score>=30?'medium':'low'));
+        return ['score'=>$score,'risk_level'=>$risk,'alerts'=>$alerts,'kyc_status'=>$kyc['status']];
+    }
+
+    public function enforce(int $userId,string $amount,string $currency='NGN',?int $transactionId=null): array
+    {
+        $assessment=$this->assess($userId,$amount,$currency,$transactionId);
+        foreach($assessment['alerts'] as $a){
+            $status=in_array($a['risk_level'],['critical'],true)?'blocked':'open';
+            $this->createAlert($userId,$transactionId,$a['rule_code'],$a['risk_level'],$assessment['score'],$a['reason'],$status);
+        }
+        if($assessment['risk_level']==='critical') throw new RuntimeException('Transaction blocked by simulated compliance risk controls.');
+        if($assessment['risk_level']==='high') throw new RuntimeException('Transaction requires compliance review before it can proceed.');
+        return $assessment;
+    }
+
+    public function alerts(string $status='',int $limit=100): array
+    { $limit=max(1,min(300,$limit));$sql='SELECT ra.*,u.email FROM risk_alerts ra JOIN users u ON u.id=ra.user_id';$params=[];if($status!==''){$sql.=' WHERE ra.status=?';$params[]=$status;}$sql.=' ORDER BY ra.id DESC LIMIT '.$limit;$s=$this->db->prepare($sql);$s->execute($params);return $s->fetchAll(); }
+
+    public function reviewAlert(int $alertId,int $adminId,string $status,string $notes=''): void
+    { if(!in_array($status,['reviewing','cleared','blocked'],true))throw new InvalidArgumentException('Invalid alert status.');$s=$this->db->prepare('UPDATE risk_alerts SET status=?,reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,metadata=JSON_SET(COALESCE(metadata,JSON_OBJECT()),"$.review_notes",?) WHERE id=?');$s->execute([$status,$adminId,trim($notes),$alertId]);$this->event(null,'risk_alert_reviewed','warning','Risk alert #'.$alertId.' marked '.$status,$adminId,['notes'=>$notes]); }
+
+    public function events(int $limit=100): array { $limit=max(1,min(300,$limit));$s=$this->db->query('SELECT ce.*,u.email FROM compliance_events ce LEFT JOIN users u ON u.id=ce.user_id ORDER BY ce.id DESC LIMIT '.$limit);return $s->fetchAll(); }
+
+    private function createAlert(int $userId,?int $transactionId,string $rule,string $level,int $score,string $reason,string $status='open'):void{$s=$this->db->prepare('INSERT INTO risk_alerts(user_id,transaction_id,rule_code,risk_level,status,score,reason,metadata) VALUES(?,?,?,?,?,?,?,?)');$s->execute([$userId,$transactionId,$rule,$level,$status,$score,$reason,json_encode(['currency'=>'NGN'],JSON_THROW_ON_ERROR)]);}
+    private function event(?int $userId,string $type,string $severity,string $description,?int $actor=null,array $meta=[]):void{$this->db->prepare('INSERT INTO compliance_events(user_id,event_type,severity,description,metadata,actor_user_id) VALUES(?,?,?,?,?,?)')->execute([$userId,$type,$severity,$description,json_encode($meta,JSON_THROW_ON_ERROR),$actor]);}
+    private function score(string $level):int{return match($level){ 'critical'=>100,'high'=>60,'medium'=>30,default=>10 };}
+}
