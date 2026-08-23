@@ -68,13 +68,15 @@ A simulated online banking platform built with PHP 8.3+, MySQL 8 and Bootstrap 5
 3. Import `database/seed.sql` for demo accounts.
 4. Point Apache/Nginx document root to `public/`.
 5. Ensure PHP has PDO MySQL enabled.
-6. Run the migration runner:
+6. Run the migration runner (required for billers, OTP, and scheduled payments):
 
 ```powershell
 php database\migrate.php
 ```
 
 The migration runner applies numbered migrations once and verifies checksums on later runs.
+
+If you imported only `schema.sql` and then opened Bill Payments, the app now applies missing migrations on the next page load. You can still run `php database\migrate.php` from the project root.
 
 ## Phase 5 scheduled payments
 
