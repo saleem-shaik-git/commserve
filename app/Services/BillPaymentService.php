@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/SecurityService.php';
+
+final class BillPaymentService
+{
+    private SecurityService $security;
+    public function __construct(private PDO $db){$this->security=new SecurityService($db);}
+
+    public function billers(?string $category=null):array{$sql='SELECT * FROM billers WHERE status="active"';$params=[];if($category){$sql.=' AND category=?';$params[]=$category;}$sql.=' ORDER BY category,name';$s=$this->db->prepare($sql);$s->execute($params);return $s->fetchAll();}
+
+    public function initiate(int $userId,int $accountId,int $billerId,string $customerReference,string $amount,string $pin,?string $idempotencyKey=null):array{
+        $amount=trim($amount);$customerReference=trim($customerReference);
+        if(!preg_match('/^\d+(\.\d{1,4})?$/',$amount)||(float)$amount<=0)throw new InvalidArgumentException('Invalid payment amount.');
+        if($customerReference==='')throw new InvalidArgumentException('Customer reference is required.');
+        if($idempotencyKey!==null&&!preg_match('/^[A-Za-z0-9._:-]{8,100}$/',$idempotencyKey))throw new InvalidArgumentException('Invalid idempotency key.');
+        if($idempotencyKey){$s=$this->db->prepare('SELECT bp.transaction_id,t.reference,bp.status FROM bill_payments bp LEFT JOIN transactions t ON t.id=bp.transaction_id WHERE bp.user_id=? AND bp.idempotency_key=? LIMIT 1');$s->execute([$userId,$idempotencyKey]);if($r=$s->fetch())return ['reference'=>(string)($r['reference']??''),'status'=>$r['status'],'otp'=>'','expires_at'=>'','is_existing'=>true];}
+        $this->security->verifyTransactionPin($userId,$pin);
+        $this->db->beginTransaction();
+        try{
+            $account=$this->lockAccount($accountId);if((int)$account['user_id']!==$userId)throw new RuntimeException('Source account does not belong to you.');if($account['status']!=='active')throw new RuntimeException('Account is not active.');
+            $s=$this->db->prepare('SELECT * FROM billers WHERE id=? AND status="active"');$s->execute([$billerId]);$biller=$s->fetch();if(!$biller)throw new RuntimeException('Biller is not active.');
+            $this->security->assertTransferAllowed($userId,$amount,$account['currency']);
+            if((float)$account['available_balance']<(float)$amount)throw new RuntimeException('Insufficient funds.');
+            $reference='BILL-'.date('YmdHis').'-'.strtoupper(bin2hex(random_bytes(4)));
+            $s=$this->db->prepare('INSERT INTO transactions(reference,type,status,amount,currency,description,initiated_by,idempotency_key) VALUES(?,"bill_payment","pending",?,?,?,?,?)');$s->execute([$reference,$amount,$account['currency'],$biller['name'].' payment - '.$customerReference,$userId,$idempotencyKey]);$txId=(int)$this->db->lastInsertId();
+            $s=$this->db->prepare('INSERT INTO bill_payments(user_id,account_id,biller_id,transaction_id,customer_reference,amount,currency,status,idempotency_key) VALUES(?,?,?,?,?,?,?,"pending",?)');$s->execute([$userId,$accountId,$billerId,$txId,$customerReference,$amount,$account['currency'],$idempotencyKey]);
+            $otp=(string)random_int(100000,999999);$s=$this->db->prepare('INSERT INTO transaction_otp_challenges(transaction_id,user_id,otp_hash,expires_at) VALUES(?,?,?,DATE_ADD(NOW(),INTERVAL 10 MINUTE))');$s->execute([$txId,$userId,hash('sha256',$otp)]);$s=$this->db->prepare('SELECT expires_at FROM transaction_otp_challenges WHERE transaction_id=? ORDER BY id DESC LIMIT 1');$s->execute([$txId]);$expires=(string)$s->fetchColumn();
+            $this->event($txId,'bill_payment_initiated',null,'pending',$userId,['biller'=>$biller['code'],'customer_reference'=>$customerReference,'amount'=>$amount]);$this->db->commit();return ['reference'=>$reference,'status'=>'pending','otp'=>$otp,'expires_at'=>$expires,'is_existing'=>false];
+        }catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}
+    }
+
+    public function confirm(string $reference,int $userId,string $otp):string{
+        $this->db->beginTransaction();try{$s=$this->db->prepare('SELECT bp.*,t.status tx_status FROM bill_payments bp JOIN transactions t ON t.id=bp.transaction_id WHERE t.reference=? FOR UPDATE');$s->execute([$reference]);$p=$s->fetch();if(!$p)throw new RuntimeException('Payment not found.');if((int)$p['user_id']!==$userId)throw new RuntimeException('Access denied.');if($p['status']!=='pending')throw new RuntimeException('Payment is not pending.');$account=$this->lockAccount((int)$p['account_id']);if((float)$account['available_balance']<(float)$p['amount'])throw new RuntimeException('Insufficient funds at confirmation time.');$s=$this->db->prepare('SELECT * FROM transaction_otp_challenges WHERE transaction_id=? AND user_id=? AND verified_at IS NULL ORDER BY id DESC LIMIT 1 FOR UPDATE');$s->execute([(int)$p['transaction_id'],$userId]);$c=$s->fetch();if(!$c)throw new RuntimeException('OTP challenge not found.');if(strtotime($c['expires_at'])<time())throw new RuntimeException('OTP expired.');if((int)$c['attempts']>=5)throw new RuntimeException('Too many OTP attempts.');if(!hash_equals($c['otp_hash'],hash('sha256',trim($otp)))){$this->db->prepare('UPDATE transaction_otp_challenges SET attempts=attempts+1 WHERE id=?')->execute([$c['id']]);throw new RuntimeException('Invalid OTP.');}
+            $s=$this->db->prepare('INSERT INTO ledger_entries(transaction_id,account_id,entry_type,amount) VALUES(?,?,"debit",?)');$s->execute([(int)$p['transaction_id'],(int)$p['account_id'],$p['amount']]);$this->db->prepare('UPDATE transactions SET status="completed",completed_at=CURRENT_TIMESTAMP WHERE id=?')->execute([(int)$p['transaction_id']]);$this->db->prepare('UPDATE bill_payments SET status="completed",completed_at=CURRENT_TIMESTAMP WHERE id=?')->execute([(int)$p['id']]);$this->db->prepare('UPDATE transaction_otp_challenges SET verified_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$c['id']]);$this->recalculate((int)$p['account_id']);$this->event((int)$p['transaction_id'],'bill_payment_completed','pending','completed',$userId);$this->notify($userId,'Bill payment successful','Payment '.$reference.' was completed.');$this->db->commit();return $reference;
+        }catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}}
+
+    public function recent(int $userId,int $limit=50):array{$limit=max(1,min(200,$limit));$s=$this->db->prepare('SELECT bp.*,b.name biller_name,b.category,t.reference,t.status tx_status FROM bill_payments bp JOIN billers b ON b.id=bp.biller_id LEFT JOIN transactions t ON t.id=bp.transaction_id WHERE bp.user_id=? ORDER BY bp.id DESC LIMIT '.$limit);$s->execute([$userId]);return $s->fetchAll();}
+    public function cancel(string $reference,int $userId):void{$s=$this->db->prepare('UPDATE bill_payments bp JOIN transactions t ON t.id=bp.transaction_id SET bp.status="cancelled",t.status="cancelled" WHERE t.reference=? AND bp.user_id=? AND bp.status="pending"');$s->execute([$reference,$userId]);if(!$s->rowCount())throw new RuntimeException('Pending payment not found.');}
+    public function payment(string $reference,int $userId):?array{$s=$this->db->prepare('SELECT bp.*,b.name biller_name,b.category,t.reference,t.status tx_status,t.created_at,t.completed_at FROM bill_payments bp JOIN billers b ON b.id=bp.biller_id JOIN transactions t ON t.id=bp.transaction_id WHERE t.reference=? AND bp.user_id=?');$s->execute([$reference,$userId]);return $s->fetch()?:null;}
+
+    private function lockAccount(int $id):array{$s=$this->db->prepare('SELECT a.*,at.currency FROM accounts a JOIN account_types at ON at.id=a.account_type_id WHERE a.id=? FOR UPDATE');$s->execute([$id]);$r=$s->fetch();if(!$r)throw new RuntimeException('Account not found.');return $r;}
+    private function recalculate(int $id):void{$s=$this->db->prepare('SELECT COALESCE(SUM(CASE WHEN le.entry_type="credit" THEN le.amount ELSE -le.amount END),0) FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? AND t.status="completed"');$s->execute([$id]);$this->db->prepare('UPDATE accounts SET available_balance=? WHERE id=?')->execute([number_format((float)$s->fetchColumn(),4,'.',''),$id]);}
+    private function event(int $tx,string $type,?string $old,?string $new,int $actor,array $meta=[]):void{$this->db->prepare('INSERT INTO transaction_events(transaction_id,event_type,old_status,new_status,actor_user_id,metadata) VALUES(?,?,?,?,?,?)')->execute([$tx,$type,$old,$new,$actor,$meta?json_encode($meta,JSON_THROW_ON_ERROR):null]);}
+    private function notify(int $user,string $title,string $message):void{$this->db->prepare('INSERT INTO notifications(user_id,title,message) VALUES(?,?,?)')->execute([$user,$title,$message]);}
+}
