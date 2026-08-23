@@ -1,18 +1,11 @@
 -- Phase 5: beneficiaries, billers, bill payments and scheduled payments
-CREATE TABLE IF NOT EXISTS beneficiaries (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id BIGINT UNSIGNED NOT NULL,
-  account_number VARCHAR(32) NOT NULL,
-  beneficiary_name VARCHAR(150) NOT NULL,
-  bank_name VARCHAR(120) NOT NULL DEFAULT 'CommServe Demo Bank',
-  nickname VARCHAR(80) NULL,
-  status ENUM('active','disabled','pending') NOT NULL DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE KEY uq_user_beneficiary_account (user_id,account_number),
-  INDEX idx_beneficiary_user_status (user_id,status)
-);
+-- beneficiaries already exists in database/schema.sql; extend it safely.
+ALTER TABLE beneficiaries
+  ADD COLUMN nickname VARCHAR(80) NULL AFTER bank_name,
+  ADD COLUMN status ENUM('active','disabled','pending') NOT NULL DEFAULT 'active' AFTER nickname,
+  ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at;
+
+ALTER TABLE transactions MODIFY type ENUM('deposit','withdrawal','transfer','fee','refund','reversal','bill_payment') NOT NULL;
 
 CREATE TABLE IF NOT EXISTS billers (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
