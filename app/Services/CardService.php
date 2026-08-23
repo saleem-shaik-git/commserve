@@ -1,0 +1,58 @@
+<?php
+
+declare(strict_types=1);
+
+final class CardService
+{
+    public function __construct(private PDO $db) {}
+
+    public function issue(int $userId,int $accountId,string $cardType='virtual',string $network='demo_visa'):array
+    {
+        $this->db->beginTransaction();
+        try {
+            $stmt=$this->db->prepare('SELECT a.*,at.currency FROM accounts a JOIN account_types at ON at.id=a.account_type_id WHERE a.id=? AND a.user_id=? FOR UPDATE');$stmt->execute([$accountId,$userId]);$account=$stmt->fetch();
+            if(!$account||$account['status']!=='active') throw new RuntimeException('Account is unavailable.');
+            if(!in_array($cardType,['virtual','debit'],true)||!in_array($network,['demo_visa','demo_mastercard'],true)) throw new InvalidArgumentException('Invalid card option.');
+            $pan=$this->generatePan($network);$cvv=str_pad((string)random_int(0,999),3,'0',STR_PAD_LEFT);$month=(int)date('n');$year=(int)date('Y')+3;
+            $stmt=$this->db->prepare('INSERT INTO cards(user_id,account_id,card_type,network,pan_hash,last4,expiry_month,expiry_year,cvv_hash) VALUES(?,?,?,?,?,?,?,?,?)');$stmt->execute([$userId,$accountId,$cardType,$network,hash('sha256',$pan),substr($pan,-4),$month,$year,hash('sha256',$cvv)]);$id=(int)$this->db->lastInsertId();
+            $this->audit($userId,'card_issued','card',$id,['card_type'=>$cardType,'network'=>$network,'last4'=>substr($pan,-4)]);$this->db->commit();
+            return ['id'=>$id,'pan'=>$pan,'cvv'=>$cvv,'expiry_month'=>$month,'expiry_year'=>$year,'last4'=>substr($pan,-4)];
+        } catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}
+    }
+
+    public function setPin(int $userId,int $cardId,string $pin):void{$this->pin($pin);$stmt=$this->db->prepare('UPDATE cards SET pin_hash=? WHERE id=? AND user_id=?');$stmt->execute([hash('sha256',$pin),$cardId,$userId]);if(!$stmt->rowCount())throw new RuntimeException('Card not found.');}
+    public function list(int $userId):array{$stmt=$this->db->prepare('SELECT c.*,a.account_number,at.currency FROM cards c JOIN accounts a ON a.id=c.account_id JOIN account_types at ON at.id=a.account_type_id WHERE c.user_id=? ORDER BY c.id DESC');$stmt->execute([$userId]);return $stmt->fetchAll();}
+    public function card(int $userId,int $cardId):array{$stmt=$this->db->prepare('SELECT c.*,a.account_number,at.currency,a.available_balance FROM cards c JOIN accounts a ON a.id=c.account_id JOIN account_types at ON at.id=a.account_type_id WHERE c.id=? AND c.user_id=?');$stmt->execute([$cardId,$userId]);$r=$stmt->fetch();if(!$r)throw new RuntimeException('Card not found.');return $r;}
+    public function setStatus(int $userId,int $cardId,string $status):void{if(!in_array($status,['active','frozen','blocked'],true))throw new InvalidArgumentException('Invalid card status.');$stmt=$this->db->prepare('UPDATE cards SET status=? WHERE id=? AND user_id=? AND status<>"expired"');$stmt->execute([$status,$cardId,$userId]);if(!$stmt->rowCount())throw new RuntimeException('Card not found or cannot be changed.');$this->audit($userId,'card_status_changed','card',$cardId,['status'=>$status]);}
+    public function setLimits(int $userId,int $cardId,string $daily,string $perTx):void{$this->positive($daily);$this->positive($perTx);$stmt=$this->db->prepare('UPDATE cards SET daily_limit=?,per_transaction_limit=? WHERE id=? AND user_id=?');$stmt->execute([$daily,$perTx,$cardId,$userId]);if(!$stmt->rowCount())throw new RuntimeException('Card not found.');}
+
+    public function pay(int $userId,int $cardId,string $amount,string $pin,string $merchant,string $channel='online',?string $idempotencyKey=null):string
+    {
+        $this->positive($amount);if(!in_array($channel,['online','pos'],true))throw new InvalidArgumentException('Invalid card payment channel.');
+        $this->db->beginTransaction();
+        try{$card=$this->lockCard($userId,$cardId);$this->assertUsable($card);if(empty($card['pin_hash'])||!hash_equals($card['pin_hash'],hash('sha256',$pin)))throw new RuntimeException('Invalid card PIN.');
+            if($idempotencyKey){$s=$this->db->prepare('SELECT t.reference FROM card_payment_idempotency i JOIN transactions t ON t.id=i.transaction_id WHERE i.card_id=? AND i.idempotency_key=? FOR UPDATE');$s->execute([$cardId,$idempotencyKey]);if($r=$s->fetchColumn()){$this->db->rollBack();return (string)$r;}}
+            if((float)$amount>(float)$card['per_transaction_limit'])throw new RuntimeException('Card transaction limit exceeded.');$this->checkDaily($cardId,$amount,$card['daily_limit']);
+            $account=$this->lockAccount((int)$card['account_id']);if((float)$account['available_balance']<(float)$amount)throw new RuntimeException('Insufficient funds.');
+            $ref=$this->createTransaction($account,$amount,'card_payment','Card payment - '.mb_substr(trim($merchant),0,140),$userId);$this->ledger($ref['id'],(int)$account['id'],'debit',$amount);$this->complete($ref['id']);$this->recalc((int)$account['id']);
+            $this->db->prepare('INSERT INTO card_transactions(card_id,transaction_id,merchant_name,channel) VALUES(?,?,?,?)')->execute([$cardId,$ref['id'],mb_substr(trim($merchant),0,160),$channel]);if($idempotencyKey)$this->db->prepare('INSERT INTO card_payment_idempotency(card_id,idempotency_key,transaction_id) VALUES(?,?,?)')->execute([$cardId,$idempotencyKey,$ref['id']]);$this->db->commit();return $ref['reference'];
+        }catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}
+    }
+
+    public function atmWithdraw(int $userId,int $cardId,string $amount,string $pin,int $terminalId):string
+    {
+        $this->positive($amount);$this->db->beginTransaction();try{$card=$this->lockCard($userId,$cardId);$this->assertUsable($card);if(empty($card['pin_hash'])||!hash_equals($card['pin_hash'],hash('sha256',$pin)))throw new RuntimeException('Invalid card PIN.');$s=$this->db->prepare('SELECT * FROM atm_terminals WHERE id=? AND status="active"');$s->execute([$terminalId]);$terminal=$s->fetch();if(!$terminal)throw new RuntimeException('ATM terminal is unavailable.');if((float)$amount>(float)$card['per_transaction_limit'])throw new RuntimeException('ATM withdrawal limit exceeded.');$this->checkDaily($cardId,$amount,$card['daily_limit'],'atm');$account=$this->lockAccount((int)$card['account_id']);if((float)$account['available_balance']<(float)$amount)throw new RuntimeException('Insufficient funds.');$ref=$this->createTransaction($account,$amount,'atm_withdrawal','ATM withdrawal - '.$terminal['terminal_code'],$userId);$this->ledger($ref['id'],(int)$account['id'],'debit',$amount);$this->complete($ref['id']);$this->recalc((int)$account['id']);$this->db->prepare('INSERT INTO card_transactions(card_id,transaction_id,merchant_name,channel) VALUES(?,?,?,"atm")')->execute([$cardId,$ref['id'],'ATM '.$terminal['terminal_code']]);$this->db->commit();return $ref['reference'];}catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}}
+
+    private function lockCard(int $userId,int $cardId):array{$s=$this->db->prepare('SELECT c.*,a.account_number,a.available_balance,a.status account_status,at.currency FROM cards c JOIN accounts a ON a.id=c.account_id JOIN account_types at ON at.id=a.account_type_id WHERE c.id=? AND c.user_id=? FOR UPDATE');$s->execute([$cardId,$userId]);$r=$s->fetch();if(!$r)throw new RuntimeException('Card not found.');return $r;}
+    private function assertUsable(array $c):void{if($c['status']!=='active')throw new RuntimeException('Card is not active.');if($c['account_status']!=='active')throw new RuntimeException('Linked account is not active.');if(((int)$c['expiry_year']<(int)date('Y'))||((int)$c['expiry_year']===(int)date('Y')&&(int)$c['expiry_month']<(int)date('n')))throw new RuntimeException('Card has expired.');}
+    private function lockAccount(int $id):array{$s=$this->db->prepare('SELECT a.*,at.currency FROM accounts a JOIN account_types at ON at.id=a.account_type_id WHERE a.id=? FOR UPDATE');$s->execute([$id]);$r=$s->fetch();if(!$r)throw new RuntimeException('Account not found.');return $r;}
+    private function createTransaction(array $a,string $amount,string $type,string $desc,int $user):array{$ref=strtoupper($type).'-'.date('YmdHis').'-'.strtoupper(bin2hex(random_bytes(4)));$s=$this->db->prepare('INSERT INTO transactions(reference,type,status,amount,currency,description,initiated_by) VALUES(?,?,"processing",?,?,?,?,?)');$s->execute([$ref,$type,$amount,$a['currency'],$desc,$user]);return ['id'=>(int)$this->db->lastInsertId(),'reference'=>$ref];}
+    private function ledger(int $tx,int $account,string $type,string $amount):void{$this->db->prepare('INSERT INTO ledger_entries(transaction_id,account_id,entry_type,amount) VALUES(?,?,?,?)')->execute([$tx,$account,$type,$amount]);}
+    private function complete(int $tx):void{$this->db->prepare('UPDATE transactions SET status="completed",completed_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$tx]);}
+    private function recalc(int $account):void{$s=$this->db->prepare('SELECT COALESCE(SUM(CASE WHEN le.entry_type="credit" THEN le.amount ELSE -le.amount END),0) FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? AND t.status="completed"');$s->execute([$account]);$this->db->prepare('UPDATE accounts SET available_balance=? WHERE id=?')->execute([number_format((float)$s->fetchColumn(),4,'.',''),$account]);}
+    private function checkDaily(int $cardId,string $amount,string $limit,string $channel='card'):void{$s=$this->db->prepare('SELECT COALESCE(SUM(t.amount),0) FROM card_transactions ct JOIN transactions t ON t.id=ct.transaction_id WHERE ct.card_id=? AND t.status="completed" AND ct.created_at>=CURDATE() AND ct.channel=?');$s->execute([$cardId,$channel]);if((float)$s->fetchColumn()+(float)$amount>(float)$limit)throw new RuntimeException('Daily card limit exceeded.');}
+    private function generatePan(string $network):string{$prefix=$network==='demo_mastercard'?'55':'4';do{$base=$prefix;while(strlen($base)<15)$base.=random_int(0,9);$sum=0;$digits=str_split($base);for($i=14;$i>=0;$i--){$n=(int)$digits[$i];if((14-$i)%2===0){$n*=2;if($n>9)$n-=9;}$sum+=$n;}$pan=$base.(string)((10-($sum%10))%10);$s=$this->db->prepare('SELECT COUNT(*) FROM cards WHERE pan_hash=?');$s->execute([hash('sha256',$pan)]);}while((int)$s->fetchColumn()>0);return $pan;}
+    private function pin(string $pin):void{if(!preg_match('/^\d{4,6}$/',$pin))throw new InvalidArgumentException('Card PIN must be 4 to 6 digits.');}
+    private function positive(string $v):void{if(!preg_match('/^\d+(\.\d{1,4})?$/',$v)||(float)$v<=0)throw new InvalidArgumentException('Amount must be greater than zero.');}
+    private function audit(int $uid,string $action,string $entity,int $id,array $details):void{$this->db->prepare('INSERT INTO audit_logs(user_id,action,entity_type,entity_id,ip_address,details) VALUES(?,?,?,?,?,?)')->execute([$uid,$action,$entity,$id,$_SERVER['REMOTE_ADDR']??null,json_encode($details,JSON_THROW_ON_ERROR)]);}
+}
