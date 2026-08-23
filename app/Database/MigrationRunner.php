@@ -1,11 +1,8 @@
 <?php
-
 declare(strict_types=1);
-
 final class MigrationRunner
 {
     public function __construct(private PDO $db, private string $directory) {}
-
     public function migrate(): array
     {
         $this->ensureMetadataTable();
@@ -28,24 +25,54 @@ final class MigrationRunner
             }
             $this->db->beginTransaction();
             try {
-                $this->db->exec($sql);
+                $statements = $this->splitSql($sql);
+                foreach ($statements as $statement) {
+                    $trimmed = trim($statement);
+                    if ($trimmed === '') continue;
+                    $this->db->exec($trimmed);
+                    if (!$this->db->inTransaction() && $trimmed !== end($statements)) {
+                        $this->db->beginTransaction();
+                    }
+                }
+                if ($this->db->inTransaction()) {
+                    $this->db->commit();
+                }
                 $stmt = $this->db->prepare('INSERT INTO schema_migrations(version,description,checksum) VALUES(?,?,?)');
                 $stmt->execute([$version, $version, $checksum]);
-                $this->db->commit();
                 $applied[] = $version;
             } catch (Throwable $e) {
-                if ($this->db->inTransaction()) $this->db->rollBack();
+                if ($this->db->inTransaction()) {
+                    try { $this->db->rollBack(); } catch (Throwable $ignored) {}
+                }
                 throw new RuntimeException('Migration failed: ' . $version . ': ' . $e->getMessage(), 0, $e);
             }
         }
         return $applied;
     }
-
+    private function splitSql(string $sql): array
+    {
+        $lines = explode("\n", $sql);
+        $cleaned = [];
+        foreach ($lines as $line) {
+            $trim = trim($line);
+            if (str_starts_with($trim, '--')) continue;
+            $cleaned[] = $line;
+        }
+        $sql = implode("\n", $cleaned);
+        $parts = preg_split('/;\s*[\r\n]+/', $sql);
+        if ($parts === false) return [$sql];
+        $result = [];
+        foreach ($parts as $part) {
+            $part = trim($part);
+            if ($part === '') continue;
+            $result[] = $part;
+        }
+        return $result ?: [$sql];
+    }
     private function ensureMetadataTable(): void
     {
         $this->db->exec('CREATE TABLE IF NOT EXISTS schema_migrations (version VARCHAR(100) PRIMARY KEY, description VARCHAR(255) NOT NULL, checksum CHAR(64) NOT NULL, applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
     }
-
     private function baselineLegacyPhase2IfPresent(): void
     {
         if (!$this->columnExists('users','transaction_pin_hash') || !$this->columnExists('transactions','idempotency_key') || !$this->tableExists('transaction_otp_challenges')) return;
@@ -55,7 +82,6 @@ final class MigrationRunner
         $sql=file_get_contents($file);if($sql===false)return;
         $stmt=$this->db->prepare('INSERT INTO schema_migrations(version,description,checksum) VALUES(?,?,?)');$stmt->execute([$version,'Baseline existing Phase 2/2B schema',hash('sha256',$sql)]);
     }
-
     private function columnExists(string $table,string $column):bool{$stmt=$this->db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?');$stmt->execute([$table,$column]);return (int)$stmt->fetchColumn()>0;}
     private function tableExists(string $table):bool{$stmt=$this->db->prepare('SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?');$stmt->execute([$table]);return (int)$stmt->fetchColumn()>0;}
 }
