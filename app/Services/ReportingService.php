@@ -1,0 +1,13 @@
+<?php
+declare(strict_types=1);
+final class ReportingService{
+ public function __construct(private PDO $db){}
+ public function overview():array{
+  $q=fn($sql)=>$this->db->query($sql)->fetchColumn();
+  return ['customers'=>(int)$q("SELECT COUNT(*) FROM users WHERE role_id=(SELECT id FROM roles WHERE name='customer')"),'accounts'=>(int)$q("SELECT COUNT(*) FROM accounts"),'balance'=>(float)$q("SELECT COALESCE(SUM(available_balance),0) FROM accounts"),'transactions'=>(int)$q("SELECT COUNT(*) FROM transactions"),'completed_volume'=>(float)$q("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE status='completed'"),'failed_transactions'=>(int)$q("SELECT COUNT(*) FROM transactions WHERE status='failed'"),'pending_transactions'=>(int)$q("SELECT COUNT(*) FROM transactions WHERE status IN ('pending','processing')"),'risk_open'=>(int)$q("SELECT COUNT(*) FROM risk_alerts WHERE status='open'"),'kyc_pending'=>(int)$q("SELECT COUNT(*) FROM customer_kyc WHERE status IN ('pending','requires_review')")];
+ }
+ public function daily(int $days=30):array{$days=max(7,min(365,$days));$s=$this->db->query("SELECT DATE(created_at) day,COUNT(*) transactions,COALESCE(SUM(CASE WHEN status='completed' THEN amount ELSE 0 END),0) volume,COALESCE(SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END),0) completed,COALESCE(SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END),0) failed FROM transactions WHERE created_at>=DATE_SUB(CURRENT_DATE,INTERVAL ".$days." DAY) GROUP BY DATE(created_at) ORDER BY day");return $s->fetchAll();}
+ public function transactionTypes(int $days=30):array{$days=max(7,min(365,$days));$s=$this->db->query("SELECT type,COUNT(*) count,COALESCE(SUM(CASE WHEN status='completed' THEN amount ELSE 0 END),0) volume FROM transactions WHERE created_at>=DATE_SUB(CURRENT_DATE,INTERVAL ".$days." DAY) GROUP BY type ORDER BY volume DESC");return $s->fetchAll();}
+ public function exportDailyCSV(array $rows):string{$h=fopen('php://temp','r+');fputcsv($h,['Date','Transactions','Completed','Failed','Completed Volume']);foreach($rows as $r)fputcsv($h,[$r['day'],$r['transactions'],$r['completed'],$r['failed'],number_format((float)$r['volume'],2,'.','')]);rewind($h);$x=stream_get_contents($h);fclose($h);return $x;}
+ public function logExport(?int $user,string $type,array $filters,string $format):void{$this->db->prepare('INSERT INTO report_exports(user_id,report_type,filters,format) VALUES(?,?,?,?)')->execute([$user,$type,json_encode($filters),$format]);}
+}
