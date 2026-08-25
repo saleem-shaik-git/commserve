@@ -9,9 +9,9 @@ if (is_file($envFile)) {
         $_ENV[trim($key)] = trim($value, " \t\n\r\0\x0B\"");
     }
 }
-
 function env(string $key, mixed $default = null): mixed { return $_ENV[$key] ?? $default; }
-
 define('BASE_PATH', dirname(__DIR__));
 define('PUBLIC_PATH', BASE_PATH . '/public');
 define('APP_NAME', (string) env('APP_NAME', 'CommServe Demo Bank'));
+define('DEFAULT_CURRENCY', (string) env('DEFAULT_CURRENCY', 'USD'));
+define('DEFAULT_LOCALE', (string) env('DEFAULT_LOCALE', 'en'));
