@@ -7,6 +7,14 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+// Legacy UI pages still contain a few hard-coded Naira symbols. Normalize HTML output
+// centrally so every customer/admin transaction screen uses the USD presentation.
+if (PHP_SAPI !== 'cli' && basename($_SERVER['SCRIPT_NAME'] ?? '') !== 'statement-download.php') {
+    ob_start(static function (string $html): string {
+        return str_replace('₦', '$', $html);
+    });
+}
+
 function e(?string $value): string { return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8'); }
 function redirect(string $path): never { header('Location: ' . $path); exit; }
 function csrf_token(): string { if (empty($_SESSION['_csrf'])) $_SESSION['_csrf'] = bin2hex(random_bytes(32)); return $_SESSION['_csrf']; }
@@ -15,7 +23,7 @@ function verify_csrf(): void { if (!hash_equals($_SESSION['_csrf'] ?? '', $_POST
 function auth_user(): ?array { return $_SESSION['user'] ?? null; }
 function require_auth(): void { if (!auth_user()) redirect('/commserve/public/login.php'); }
 function require_role(string $role): void { require_auth(); if ((auth_user()['role'] ?? '') !== $role) { http_response_code(403); exit('Forbidden'); } }
-function format_money(float|string $amount, string $currency='USD'): string { return $currency.' '.number_format((float)$amount,2); }
+function format_money(float|string $amount, string $currency='USD'): string { return '$'.number_format((float)$amount,2); }
 function format_date(?string $date, string $fmt='M d, Y'): string { if(!$date) return '-'; $ts=strtotime($date); return $ts?date($fmt,$ts):$date; }
 function money_color(string $entryType): string { return $entryType==='credit'?'text-success':'text-danger'; }
 function safe_count(mixed $v): int { return is_countable($v) ? count($v) : 0; }
