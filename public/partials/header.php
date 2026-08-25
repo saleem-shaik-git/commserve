@@ -3,7 +3,7 @@
 if (!isset($user)) $user = auth_user();
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="<?= e(current_locale()) ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -20,8 +20,12 @@ if (!isset($user)) $user = auth_user();
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"><span class="navbar-toggler-icon"></span></button>
     <div class="collapse navbar-collapse" id="topNav">
-      <div class="ms-auto d-flex align-items-center gap-3">
+      <div class="ms-auto d-flex align-items-center gap-3 flex-wrap">
         <span class="text-muted small d-none d-md-inline">Simulated environment — no real funds</span>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-translate text-muted"></i>
+          <?= language_selector('form-select form-select-sm w-auto') ?>
+        </div>
         <div class="dropdown">
           <a class="btn btn-light btn-sm dropdown-toggle" href="#" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle me-1"></i> <?= e($user['name'] ?? $user['email'] ?? 'User') ?>
