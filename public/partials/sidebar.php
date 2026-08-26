@@ -3,10 +3,11 @@ $current = $currentPage ?? '';
 function nav_active(string $key, string $current): string { return $current === $key ? 'active' : ''; }
 ?>
 <aside class="col-lg-2 sidebar p-3 bg-white border-end">
-  <div class="d-lg-none mb-3"><div class="card hero-card border-0"><div class="card-body p-3 text-white"><div class="small text-white-50">Total Balance</div><div class="fw-bold fs-5">₦<?= number_format($totalBalance ?? 0, 2) ?></div></div></div></div>
+  <div class="d-lg-none mb-3"><div class="card hero-card border-0"><div class="card-body p-3 text-white"><div class="small text-white-50">Total Balance</div><div class="fw-bold fs-5">$<?= number_format($totalBalance ?? 0, 2) ?></div></div></div></div>
   <nav class="nav flex-column gap-1">
     <a class="nav-link <?= nav_active('dashboard', $current) ?>" href="/commserve/public/dashboard.php"><i class="bi bi-grid me-2"></i>Dashboard</a>
     <a class="nav-link <?= nav_active('accounts', $current) ?>" href="/commserve/public/accounts.php"><i class="bi bi-wallet2 me-2"></i>Accounts</a>
+    <a class="nav-link <?= nav_active('crypto', $current) ?>" href="/commserve/public/crypto.php"><i class="bi bi-currency-bitcoin me-2"></i>Crypto</a>
     <a class="nav-link <?= nav_active('transfer', $current) ?>" href="/commserve/public/transfer.php"><i class="bi bi-send me-2"></i>Transfers</a>
     <a class="nav-link <?= nav_active('transactions', $current) ?>" href="/commserve/public/transactions.php"><i class="bi bi-receipt me-2"></i>Transactions</a>
     <a class="nav-link <?= nav_active('statements', $current) ?>" href="/commserve/public/statements.php"><i class="bi bi-file-earmark-text me-2"></i>Statements</a>
