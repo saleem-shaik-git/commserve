@@ -29,7 +29,7 @@ function translations(): array
         // Navigation & shell
         'Dashboard' => 'Dashboard', 'Accounts' => 'Accounts', 'Crypto' => 'Crypto', 'Transfers' => 'Transfers',
         'Transactions' => 'Transactions', 'Statements' => 'Statements', 'Beneficiaries' => 'Beneficiaries',
-        'Bill Payments' => 'Bill Payments', 'Scheduled Payments' => 'Scheduled Payments', 'Cards & ATM' => 'Cards & ATM',
+        'Bill Payments' => 'Bill Payments', 'Scheduled Payments' => 'Scheduled Payments',
         'Transaction PIN' => 'Transaction PIN', 'Support' => 'Support', 'Notifications' => 'Notifications',
         'Security' => 'Security', 'Settings' => 'Settings', 'Logout' => 'Logout', 'Login' => 'Login', 'Sign in' => 'Sign in',
         'Language' => 'Language', 'Currency' => 'Currency', 'User' => 'User', 'Total Balance' => 'Total Balance',
@@ -77,16 +77,15 @@ function translations(): array
 
         // Dashboard
         'Welcome back, %s' => 'Welcome back, %s', 'Here\'s your banking overview.' => 'Here\'s your banking overview.',
-        'Pay Bills' => 'Pay Bills', 'My Cards' => 'My Cards', 'ATM' => 'ATM', 'Manage accounts' => 'Manage accounts',
+        'Pay Bills' => 'Pay Bills', 'My Cards' => 'My Cards', 'Manage accounts' => 'Manage accounts',
         'Account Mix' => 'Account Mix', 'Pending transfers' => 'Pending transfers',
         'Manage PIN & Security' => 'Manage PIN & Security', 'Your Accounts' => 'Your Accounts',
         'No accounts found.' => 'No accounts found.', 'Recent Transactions' => 'Recent Transactions',
         'No transactions yet.' => 'No transactions yet.', 'Payments & Cards' => 'Payments & Cards',
         'Pay electricity / internet / cable / airtime' => 'Pay electricity / internet / cable / airtime',
         'Schedule a payment' => 'Schedule a payment', 'Manage beneficiaries' => 'Manage beneficiaries',
-        'Manage cards' => 'Manage cards', 'Make card payment' => 'Make card payment', 'ATM withdrawal' => 'ATM withdrawal',
+        'Manage cards' => 'Manage cards', 'Make card payment' => 'Make card payment',
         'Never share PIN or OTP' => 'Never share PIN or OTP', 'Verify account numbers' => 'Verify account numbers',
-        'Funds available for transfers, card and ATM transactions' => 'Funds available for transfers, card and ATM transactions',
         'account(s)' => 'account(s)', 'Ledger-backed' => 'Ledger-backed',
 
         // Accounts
@@ -139,7 +138,7 @@ function translations(): array
         'This receipt is computer generated and valid without signature.' => 'This receipt is computer generated and valid without signature.',
         'Receipt not found:' => 'Receipt not found:', 'Unknown' => 'Unknown',
 
-        // Cards / ATM
+        // Cards
         'My Cards' => 'My Cards', 'Issue a new card' => 'Issue a new card',
         'Card issued. Save the card details shown below; the full card number is not stored for later display.' => 'Card issued. Save the card details shown below; the full card number is not stored for later display.',
         'Card details — save now:' => 'Card details — save now:', 'Card status updated.' => 'Card status updated.',
@@ -147,9 +146,7 @@ function translations(): array
         '4-6 digit PIN' => '4-6 digit PIN', 'Card Payment' => 'Card Payment', 'Card PIN' => 'Card PIN',
         'Pay with card' => 'Pay with card', 'Idempotency key' => 'Idempotency key',
         'Card payment completed.' => 'Card payment completed.', 'Card Payment Reference:' => 'Card Payment Reference:',
-        'ATM Withdrawal' => 'ATM Withdrawal', 'Amount' => 'Amount', 'Withdraw cash' => 'Withdraw cash',
-        'Cash withdrawal completed successfully.' => 'Cash withdrawal completed successfully.',
-        'ATM Terminal' => 'ATM Terminal',
+        'Amount' => 'Amount', 'Withdraw cash' => 'Withdraw cash',
 
         // Crypto
         'Crypto Wallet' => 'Crypto Wallet', 'Manage cryptocurrency balances, transfers and conversions.' => 'Manage cryptocurrency balances, transfers and conversions.',
@@ -495,12 +492,13 @@ function translations(): array
         'Type your message…' => 'Type your message…',
         'available' => 'available',
         'our team replies here in real time.' => 'our team replies here in real time.',
+        'Funds available for transfers and card transactions' => 'Funds available for transfers and card transactions',
     ];
 
     $es = [
         'Dashboard' => 'Panel', 'Accounts' => 'Cuentas', 'Crypto' => 'Cripto', 'Transfers' => 'Transferencias',
         'Transactions' => 'Transacciones', 'Statements' => 'Estados de cuenta', 'Beneficiaries' => 'Beneficiarios',
-        'Bill Payments' => 'Pago de servicios', 'Scheduled Payments' => 'Pagos programados', 'Cards & ATM' => 'Tarjetas y cajeros',
+        'Bill Payments' => 'Pago de servicios', 'Scheduled Payments' => 'Pagos programados',
         'Transaction PIN' => 'PIN de transacción', 'Support' => 'Soporte', 'Notifications' => 'Notificaciones',
         'Security' => 'Seguridad', 'Settings' => 'Configuración', 'Logout' => 'Cerrar sesión', 'Login' => 'Iniciar sesión',
         'Sign in' => 'Iniciar sesión', 'Language' => 'Idioma', 'Currency' => 'Moneda', 'User' => 'Usuario',
@@ -545,7 +543,7 @@ function translations(): array
         'Beneficiary verification' => 'Verificación del beneficiario', 'Final authorization' => 'Autorización final',
         'Welcome back, %s' => 'Bienvenido de nuevo, %s',
         'Here\'s your banking overview.' => 'Este es su resumen bancario.', 'Pay Bills' => 'Pagar servicios',
-        'My Cards' => 'Mis tarjetas', 'ATM' => 'Cajero', 'Manage accounts' => 'Administrar cuentas',
+        'My Cards' => 'Mis tarjetas', 'Manage accounts' => 'Administrar cuentas',
         'Account Mix' => 'Composición de cuentas', 'Pending transfers' => 'Transferencias pendientes',
         'Manage PIN & Security' => 'Administrar PIN y seguridad', 'Your Accounts' => 'Sus cuentas',
         'No accounts found.' => 'No se encontraron cuentas.', 'Recent Transactions' => 'Transacciones recientes',
@@ -553,9 +551,8 @@ function translations(): array
         'Pay electricity / internet / cable / airtime' => 'Pagar electricidad, internet, cable o tiempo aire',
         'Schedule a payment' => 'Programar un pago', 'Manage beneficiaries' => 'Administrar beneficiarios',
         'Manage cards' => 'Administrar tarjetas', 'Make card payment' => 'Realizar pago con tarjeta',
-        'ATM withdrawal' => 'Retiro en cajero', 'Never share PIN or OTP' => 'Nunca comparta su PIN ni su OTP',
+        'Never share PIN or OTP' => 'Nunca comparta su PIN ni su OTP',
         'Verify account numbers' => 'Verifique los números de cuenta',
-        'Funds available for transfers, card and ATM transactions' => 'Fondos disponibles para transferencias, tarjetas y cajeros',
         'account(s)' => 'cuenta(s)', 'Ledger-backed' => 'Basado en libro mayor',
         'Account Management' => 'Gestión de cuentas', 'About your accounts' => 'Acerca de sus cuentas',
         'Savings Account' => 'Cuenta de ahorros', 'Current Account' => 'Cuenta corriente',
@@ -612,8 +609,7 @@ function translations(): array
         'Card limits updated.' => 'Límites de la tarjeta actualizados.', '4-6 digit PIN' => 'PIN de 4-6 dígitos',
         'Card Payment' => 'Pago con tarjeta', 'Card PIN' => 'PIN de la tarjeta', 'Pay with card' => 'Pagar con tarjeta',
         'Idempotency key' => 'Clave de idempotencia', 'Card payment completed.' => 'Pago con tarjeta completado.',
-        'ATM Withdrawal' => 'Retiro en cajero', 'Withdraw cash' => 'Retirar efectivo',
-        'Cash withdrawal completed successfully.' => 'Retiro de efectivo completado con éxito.', 'ATM Terminal' => 'Terminal de cajero',
+        'Withdraw cash' => 'Retirar efectivo',
         'Crypto Wallet' => 'Monedero de cripto', 'Manage cryptocurrency balances, transfers and conversions.' => 'Administre saldos, transferencias y conversiones de criptomonedas.',
         'Receive Crypto' => 'Recibir cripto', 'Send Crypto' => 'Enviar cripto', 'Convert Crypto' => 'Convertir cripto',
         'Each supported asset has a unique deposit address.' => 'Cada activo admitido tiene una dirección de depósito única.',
@@ -953,13 +949,14 @@ function translations(): array
         'Type your message…' => 'Escriba su mensaje…',
         'available' => 'disponible',
         'our team replies here in real time.' => 'nuestro equipo responde aquí en tiempo real.',
+        'Funds available for transfers and card transactions' => 'Fondos disponibles para transferencias y pagos con tarjeta',
     ];
 
     $fr = [
         'Dashboard' => 'Tableau de bord', 'Accounts' => 'Comptes', 'Crypto' => 'Crypto', 'Transfers' => 'Virements',
         'Transactions' => 'Transactions', 'Statements' => 'Relevés', 'Beneficiaries' => 'Bénéficiaires',
         'Bill Payments' => 'Paiement de factures', 'Scheduled Payments' => 'Paiements programmés',
-        'Cards & ATM' => 'Cartes et distributeurs', 'Transaction PIN' => 'Code PIN', 'Support' => 'Assistance',
+        'Transaction PIN' => 'Code PIN', 'Support' => 'Assistance',
         'Notifications' => 'Notifications', 'Security' => 'Sécurité', 'Settings' => 'Paramètres',
         'Logout' => 'Déconnexion', 'Login' => 'Connexion', 'Sign in' => 'Se connecter', 'Language' => 'Langue',
         'Currency' => 'Devise', 'User' => 'Utilisateur', 'Total Balance' => 'Solde total',
@@ -1002,7 +999,7 @@ function translations(): array
         'Identity verification' => 'Vérification d\'identité', 'Amount verification' => 'Vérification du montant',
         'Beneficiary verification' => 'Vérification du bénéficiaire', 'Final authorization' => 'Autorisation finale',
         'Welcome back, %s' => 'Bon retour, %s', 'Here\'s your banking overview.' => 'Voici votre aperçu bancaire.',
-        'Pay Bills' => 'Payer des factures', 'My Cards' => 'Mes cartes', 'ATM' => 'Distributeur',
+        'Pay Bills' => 'Payer des factures', 'My Cards' => 'Mes cartes',
         'Manage accounts' => 'Gérer les comptes', 'Account Mix' => 'Répartition des comptes',
         'Pending transfers' => 'Virements en attente', 'Manage PIN & Security' => 'Gérer PIN et sécurité',
         'Your Accounts' => 'Vos comptes', 'No accounts found.' => 'Aucun compte trouvé.',
@@ -1011,9 +1008,8 @@ function translations(): array
         'Pay electricity / internet / cable / airtime' => 'Payer électricité, internet, câble, crédit mobile',
         'Schedule a payment' => 'Programmer un paiement', 'Manage beneficiaries' => 'Gérer les bénéficiaires',
         'Manage cards' => 'Gérer les cartes', 'Make card payment' => 'Effectuer un paiement par carte',
-        'ATM withdrawal' => 'Retrait au distributeur', 'Never share PIN or OTP' => 'Ne partagez jamais votre PIN ni votre OTP',
+        'Never share PIN or OTP' => 'Ne partagez jamais votre PIN ni votre OTP',
         'Verify account numbers' => 'Vérifiez les numéros de compte',
-        'Funds available for transfers, card and ATM transactions' => 'Fonds disponibles pour les virements, cartes et distributeurs',
         'account(s)' => 'compte(s)', 'Ledger-backed' => 'Basé sur le grand livre',
         'Account Management' => 'Gestion des comptes', 'About your accounts' => 'À propos de vos comptes',
         'Savings Account' => 'Compte d\'épargne', 'Current Account' => 'Compte courant',
@@ -1073,9 +1069,7 @@ function translations(): array
         'Card limits updated.' => 'Limites de la carte mises à jour.', '4-6 digit PIN' => 'PIN de 4 à 6 chiffres',
         'Card Payment' => 'Paiement par carte', 'Card PIN' => 'PIN de la carte', 'Pay with card' => 'Payer par carte',
         'Idempotency key' => 'Clé d\'idempotence', 'Card payment completed.' => 'Paiement par carte effectué.',
-        'ATM Withdrawal' => 'Retrait au distributeur', 'Withdraw cash' => 'Retirer des espèces',
-        'Cash withdrawal completed successfully.' => 'Retrait d\'espèces effectué avec succès.',
-        'ATM Terminal' => 'Terminal de distributeur',
+        'Withdraw cash' => 'Retirer des espèces',
         'Crypto Wallet' => 'Portefeuille crypto',
         'Manage cryptocurrency balances, transfers and conversions.' => 'Gérez soldes, transferts et conversions de cryptomonnaies.',
         'Receive Crypto' => 'Recevoir de la crypto', 'Send Crypto' => 'Envoyer de la crypto',
@@ -1418,6 +1412,7 @@ function translations(): array
         'Type your message…' => 'Écrivez votre message…',
         'available' => 'disponible',
         'our team replies here in real time.' => 'notre équipe répond ici en temps réel.',
+        'Funds available for transfers and card transactions' => 'Fonds disponibles pour les virements et paiements par carte',
     ];
 
     $d = [

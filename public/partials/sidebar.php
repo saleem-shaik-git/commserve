@@ -15,7 +15,7 @@ function nav_active(string $key, string $current): string { return $current === 
     <a class="nav-link <?= nav_active('beneficiaries', $current) ?>" href="<?=url('beneficiaries.php')?>"><i class="bi bi-person-lines-fill me-2"></i><?=e(t('Beneficiaries'))?></a>
     <a class="nav-link <?= nav_active('payments', $current) ?>" href="<?=url('bill-payments.php')?>"><i class="bi bi-lightning-charge me-2"></i><?=e(t('Bill Payments'))?></a>
     <a class="nav-link <?= nav_active('scheduled', $current) ?>" href="<?=url('scheduled-payments.php')?>"><i class="bi bi-calendar-check me-2"></i><?=e(t('Scheduled Payments'))?></a>
-    <a class="nav-link <?= nav_active('cards', $current) ?>" href="<?=url('cards.php')?>"><i class="bi bi-credit-card me-2"></i><?=e(t('Cards & ATM'))?></a>
+    <a class="nav-link <?= nav_active('cards', $current) ?>" href="<?=url('cards.php')?>"><i class="bi bi-credit-card me-2"></i><?=e(t('Cards'))?></a>
     <a class="nav-link <?= nav_active('pin', $current) ?>" href="<?=url('transaction-pin.php')?>"><i class="bi bi-shield-lock me-2"></i><?=e(t('Transaction PIN'))?></a>
     <span class="crumb-divider mt-3 small text-muted text-uppercase fw-semibold d-none d-lg-block"><?=e(t('Support'))?></span>
     <a class="nav-link <?= nav_active('chat', $current) ?>" href="<?=url('support-chat.php')?>"><i class="bi bi-chat-dots me-2"></i><?=e(t('Live Chat'))?><?php if(!empty($chat_unread)):?> <span class="badge text-bg-danger ms-1"><?=(int)$chat_unread?></span><?php endif; ?></a>

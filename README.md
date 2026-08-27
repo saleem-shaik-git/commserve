@@ -57,12 +57,11 @@ An online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and Bootstrap 
 - Safe atomic scheduler claiming
 - Admin biller catalogue and payment metrics
 
-### Phase 6 — Cards & ATM
+### Phase 6 — Cards
 - Virtual/debit cards (Visa/Mastercard-style networks)
 - Card numbers/CVV stored hashed; full details shown once at issuance
 - Card freeze/unfreeze, card PIN, per-card daily and per-transaction limits
 - Online/POS card payments with idempotency
-- ATM withdrawals with terminals
 
 ### Phase 7 — Compliance & Risk
 - KYC submission and admin review

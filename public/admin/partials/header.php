@@ -37,7 +37,7 @@ $adminNav['chat'] = [t('Live Chat') . ($chatUnreadAdmin > 0 ? ' (' . $chatUnread
 <nav class="navbar navbar-dark bg-dark sticky-top">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?= url('admin/') ?>">
-      <span class="brand-mark-sm">C</span> <?= e(t('Admin')) ?>
+      <span class="brand-mark-sm">C</span> CommServe Bank <span class="text-white-50">· <?= e(t('Admin')) ?></span>
     </a>
     <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end ms-auto">
       <span class="text-white-50 small d-none d-md-inline"><?= e(t('Signed in as')) ?> <?= e($user['name'] ?? $user['email'] ?? t('Admin')) ?></span>
