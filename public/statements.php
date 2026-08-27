@@ -74,7 +74,7 @@ require __DIR__ . '/partials/sidebar.php';
             <select name="account_id" class="form-select" required>
               <option value="">Select account</option>
               <?php foreach ($accounts as $a): ?>
-                <option value="<?= $a['id'] ?>" <?= $selectedAccountId===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · ₦<?= number_format((float)$a['available_balance'],2) ?></option>
+                <option value="<?= $a['id'] ?>" <?= $selectedAccountId===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · $<?= number_format((float)$a['available_balance'],2) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -159,7 +159,7 @@ require __DIR__ . '/partials/sidebar.php';
       <div class="card-body">
         <?php foreach ($accounts as $a): ?>
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <div><div class="fw-semibold small"><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?></div><div class="small text-muted">₦<?= number_format((float)$a['available_balance'],2) ?></div></div>
+            <div><div class="fw-semibold small"><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?></div><div class="small text-muted">$<?= number_format((float)$a['available_balance'],2) ?></div></div>
             <a href="/commserve/public/statements.php?account=<?= $a['id'] ?>" class="btn btn-sm btn-outline-primary">Select</a>
           </div>
         <?php endforeach; ?>

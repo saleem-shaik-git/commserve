@@ -100,9 +100,9 @@ require __DIR__ . '/partials/sidebar.php';
               <?= csrf_field() ?>
               <input type="hidden" name="transfer_type" value="own">
               <div class="row g-3">
-                <div class="col-md-6"><label class="form-label">From Account</label><select name="from_account" class="form-select" required><option value="">Select</option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>" <?= $fromPreselect===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · ₦<?= number_format((float)$a['available_balance'],2) ?></option><?php endforeach; ?></select></div>
+                <div class="col-md-6"><label class="form-label">From Account</label><select name="from_account" class="form-select" required><option value="">Select</option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>" <?= $fromPreselect===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · $<?= number_format((float)$a['available_balance'],2) ?></option><?php endforeach; ?></select></div>
                 <div class="col-md-6"><label class="form-label">To Account (Own)</label><select name="to_account" class="form-select" required><option value="">Select</option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>"><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?></option><?php endforeach; ?></select></div>
-                <div class="col-md-6"><label class="form-label">Amount (₦)</label><div class="input-group"><span class="input-group-text">₦</span><input name="amount" class="form-control" inputmode="decimal" placeholder="0.00" required></div></div>
+                <div class="col-md-6"><label class="form-label">Amount ($)</label><div class="input-group"><span class="input-group-text">$</span><input name="amount" class="form-control" inputmode="decimal" placeholder="0.00" required></div></div>
                 <div class="col-md-6"><label class="form-label">Transaction PIN</label><input name="transaction_pin" type="password" class="form-control" inputmode="numeric" pattern="\d{4,6}" maxlength="6" placeholder="4-6 digits" required></div>
                 <div class="col-12"><label class="form-label">Description</label><input name="description" class="form-control" maxlength="255" placeholder="e.g. Savings to Current"></div>
                 <div class="col-12"><label class="form-label">Idempotency Key <span class="text-muted">(optional, auto-generated)</span></label><input name="idempotency_key" class="form-control" minlength="8" maxlength="100" placeholder="Unique key for safe retry"></div>
@@ -121,9 +121,9 @@ require __DIR__ . '/partials/sidebar.php';
               <?= csrf_field() ?>
               <input type="hidden" name="transfer_type" value="beneficiary">
               <div class="row g-3">
-                <div class="col-md-6"><label class="form-label">From Account</label><select name="from_account" class="form-select" required><option value="">Select</option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>" <?= $fromPreselect===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · ₦<?= number_format((float)$a['available_balance'],2) ?></option><?php endforeach; ?></select></div>
+                <div class="col-md-6"><label class="form-label">From Account</label><select name="from_account" class="form-select" required><option value="">Select</option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>" <?= $fromPreselect===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · $<?= number_format((float)$a['available_balance'],2) ?></option><?php endforeach; ?></select></div>
                 <div class="col-md-6"><label class="form-label">Beneficiary</label><select name="beneficiary_id" class="form-select" required><option value="">Select beneficiary</option><?php foreach ($beneficiaries as $b): if($b['status']!=='active') continue; ?><option value="<?= $b['id'] ?>"><?= e($b['name']) ?> · <?= e($b['account_number']) ?> · <?= e($b['bank_name']) ?></option><?php endforeach; ?></select></div>
-                <div class="col-md-6"><label class="form-label">Amount</label><div class="input-group"><span class="input-group-text">₦</span><input name="amount" class="form-control" required></div></div>
+                <div class="col-md-6"><label class="form-label">Amount</label><div class="input-group"><span class="input-group-text">$</span><input name="amount" class="form-control" required></div></div>
                 <div class="col-md-6"><label class="form-label">Transaction PIN</label><input name="transaction_pin" type="password" class="form-control" pattern="\d{4,6}" maxlength="6" required></div>
                 <div class="col-12"><label class="form-label">Description</label><input name="description" class="form-control" placeholder="e.g. Family support"></div>
                 <div class="col-12"><button class="btn btn-primary w-100 py-2"><i class="bi bi-person-check me-2"></i>Send to Beneficiary — Confirm OTP</button></div>
@@ -139,9 +139,9 @@ require __DIR__ . '/partials/sidebar.php';
               <?= csrf_field() ?>
               <input type="hidden" name="transfer_type" value="other">
               <div class="row g-3">
-                <div class="col-md-6"><label class="form-label">From Account</label><select name="from_account" class="form-select" required><option value="">Select</option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>" <?= $fromPreselect===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · ₦<?= number_format((float)$a['available_balance'],2) ?></option><?php endforeach; ?></select></div>
+                <div class="col-md-6"><label class="form-label">From Account</label><select name="from_account" class="form-select" required><option value="">Select</option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>" <?= $fromPreselect===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · $<?= number_format((float)$a['available_balance'],2) ?></option><?php endforeach; ?></select></div>
                 <div class="col-md-6"><label class="form-label">Destination Account</label><select name="to_account" class="form-select" required><option value="">Select</option><?php foreach ($otherAccounts as $oa): ?><option value="<?= $oa['id'] ?>"><?= e($oa['first_name'].' '.$oa['last_name']) ?> · <?= e($oa['account_number']) ?> · <?= e($oa['type_name']) ?></option><?php endforeach; ?></select></div>
-                <div class="col-md-6"><label class="form-label">Amount</label><div class="input-group"><span class="input-group-text">₦</span><input name="amount" class="form-control" required></div></div>
+                <div class="col-md-6"><label class="form-label">Amount</label><div class="input-group"><span class="input-group-text">$</span><input name="amount" class="form-control" required></div></div>
                 <div class="col-md-6"><label class="form-label">Transaction PIN</label><input name="transaction_pin" type="password" class="form-control" pattern="\d{4,6}" maxlength="6" required></div>
                 <div class="col-12"><label class="form-label">Description</label><input name="description" class="form-control" placeholder="e.g. Payment"></div>
                 <div class="col-12"><button class="btn btn-primary w-100 py-2"><i class="bi bi-send me-2"></i>Transfer — Verify OTP</button></div>
@@ -172,9 +172,9 @@ require __DIR__ . '/partials/sidebar.php';
       <div class="card-header bg-white fw-bold"><i class="bi bi-wallet2 me-2"></i>Your Balances</div>
       <div class="card-body">
         <?php foreach ($accounts as $a): ?>
-          <div class="d-flex justify-content-between align-items-center mb-2"><span class="small"><?= e($a['type_name']) ?> ****<?= e(substr($a['account_number'],-4)) ?></span><strong class="small">₦<?= number_format((float)$a['available_balance'],2) ?></strong></div>
+          <div class="d-flex justify-content-between align-items-center mb-2"><span class="small"><?= e($a['type_name']) ?> ****<?= e(substr($a['account_number'],-4)) ?></span><strong class="small">$<?= number_format((float)$a['available_balance'],2) ?></strong></div>
         <?php endforeach; ?>
-        <hr><div class="d-flex justify-content-between"><span class="fw-bold">Total</span><span class="fw-bold">₦<?= number_format($totalBalance,2) ?></span></div>
+        <hr><div class="d-flex justify-content-between"><span class="fw-bold">Total</span><span class="fw-bold">$<?= number_format($totalBalance,2) ?></span></div>
       </div>
     </div>
   </div>

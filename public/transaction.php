@@ -62,7 +62,7 @@ require __DIR__ . '/partials/sidebar.php';
               <div><h5 class="fw-bold mb-1"><?= e(strtoupper($tx['type'] ?? 'Transaction')) ?></h5><div class="small text-muted font-monospace"><?= e($tx['reference']) ?></div></div>
               <span class="badge fs-6 <?= ($tx['status']==='completed'?'text-bg-success':($tx['status']==='pending'?'text-bg-warning':'text-bg-secondary')) ?>"><?= e(strtoupper($tx['status'])) ?></span>
             </div>
-            <div class="display-6 fw-bold mt-4">₦<?= number_format((float)($tx['amount'] ?? 0),2) ?></div>
+            <div class="display-6 fw-bold mt-4">$<?= number_format((float)($tx['amount'] ?? 0),2) ?></div>
             <div class="text-muted small"><?= e($tx['currency'] ?? 'NGN') ?> · <?= e($tx['description'] ?? '') ?></div>
             <hr>
             <dl class="row small mb-0">
@@ -98,7 +98,7 @@ require __DIR__ . '/partials/sidebar.php';
                 }
                 foreach ($ledger as $le):
               ?>
-                <tr><td><?= e($le['account_number'] ?? '') ?><br><small class="text-muted"><?= e($le['type_name'] ?? '') ?></small></td><td><?= e($le['account_number'] ? '' : '') ?></td><td><span class="badge <?= ($le['entry_type']==='credit'?'text-bg-success':'text-bg-danger') ?>"><?= e($le['entry_type']) ?></span></td><td class="fw-bold">₦<?= number_format((float)$le['amount'],2) ?></td></tr>
+                <tr><td><?= e($le['account_number'] ?? '') ?><br><small class="text-muted"><?= e($le['type_name'] ?? '') ?></small></td><td><?= e($le['account_number'] ? '' : '') ?></td><td><span class="badge <?= ($le['entry_type']==='credit'?'text-bg-success':'text-bg-danger') ?>"><?= e($le['entry_type']) ?></span></td><td class="fw-bold">$<?= number_format((float)$le['amount'],2) ?></td></tr>
               <?php endforeach; ?>
               <?php if (empty($ledger)): ?><tr><td colspan="4" class="text-center text-muted py-3">No ledger entries yet — transaction is pending OTP confirmation.</td></tr><?php endif; ?>
             </tbody></table></div>
