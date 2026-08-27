@@ -718,8 +718,6 @@ function translations(): array
         'Example' => 'Example',
         'Example — Premium Savings' => 'Example — Premium Savings',
         'Fixed deposits' => 'Fixed deposits',
-        'Full audit trail on every action, with maker-checker on admin operations.' => 'Full audit trail on every action, with maker-checker on admin operations.',
-        'Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — secured by four-stage OTP verification and administrator approval on every transfer.' => 'Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — secured by four-stage OTP verification and administrator approval on every transfer.',
         'Instant transfers' => 'Instant transfers',
         'Interest is calculated daily and posted monthly to the ledger.' => 'Interest is calculated daily and posted monthly to the ledger.',
         'Join in three steps' => 'Join in three steps',
@@ -746,6 +744,8 @@ function translations(): array
         'Open your account' => 'Open your account',
         'Bank-grade controls' => 'Bank-grade controls',
         'Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.' => 'Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.',
+        'Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — all in one secure app.' => 'Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — all in one secure app.',
+        'A full audit trail on every action.' => 'A full audit trail on every action.',
     ];
 
     $es = [
@@ -1428,8 +1428,6 @@ function translations(): array
         'Example' => 'Ejemplo',
         'Example — Premium Savings' => 'Ejemplo — Ahorro Premium',
         'Fixed deposits' => 'Depósitos a plazo',
-        'Full audit trail on every action, with maker-checker on admin operations.' => 'Trazabilidad de auditoría en cada acción, con maker-checker en operaciones de administración.',
-        'Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — secured by four-stage OTP verification and administrator approval on every transfer.' => 'Banca digital completa: ahorros que generan interés real abonado al libro mayor, depósitos a plazo, préstamos personales, tarjetas, cripto y transferencias instantáneas — protegidas por verificación OTP de cuatro etapas y aprobación del administrador en cada transferencia.',
         'Instant transfers' => 'Transferencias instantáneas',
         'Interest is calculated daily and posted monthly to the ledger.' => 'El interés se calcula a diario y se abona mensualmente al libro mayor.',
         'Join in three steps' => 'Únase en tres pasos',
@@ -1456,6 +1454,8 @@ function translations(): array
         'Open your account' => 'Abra su cuenta',
         'Bank-grade controls' => 'Controles de nivel bancario',
         'Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.' => 'Cuentas propias, beneficiarios o cualquier número de cuenta CommServe — protegido con su PIN de transacción.',
+        'Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — all in one secure app.' => 'Banca digital completa: ahorros que generan interés real abonado al libro mayor, depósitos a plazo, préstamos personales, tarjetas, cripto y transferencias instantáneas — todo en una app segura.',
+        'A full audit trail on every action.' => 'Trazabilidad de auditoría en cada acción.',
     ];
 
     $fr = [
@@ -2144,8 +2144,6 @@ function translations(): array
         'Example' => 'Exemple',
         'Example — Premium Savings' => 'Exemple — Épargne Premium',
         'Fixed deposits' => 'Dépôts à terme',
-        'Full audit trail on every action, with maker-checker on admin operations.' => 'Piste d’audit complète sur chaque action, avec maker-checker sur les opérations admin.',
-        'Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — secured by four-stage OTP verification and administrator approval on every transfer.' => 'Banque numérique complète : épargne avec intérêts réels inscrits au grand livre, dépôts à terme, prêts personnels, cartes, crypto et virements instantanés — sécurisés par une vérification OTP en quatre étapes et l’approbation d’un administrateur pour chaque virement.',
         'Instant transfers' => 'Virements instantanés',
         'Interest is calculated daily and posted monthly to the ledger.' => 'Les intérêts sont calculés chaque jour et versés mensuellement au grand livre.',
         'Join in three steps' => 'Rejoignez-nous en trois étapes',
@@ -2172,6 +2170,8 @@ function translations(): array
         'Open your account' => 'Ouvrez votre compte',
         'Bank-grade controls' => 'Contrôles bancaires',
         'Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.' => 'Comptes propres, bénéficiaires ou tout numéro de compte CommServe — protégé par votre code PIN.',
+        'Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — all in one secure app.' => 'Banque numérique complète : épargne avec intérêts réels inscrits au grand livre, dépôts à terme, prêts personnels, cartes, crypto et virements instantanés — tout en une app sécurisée.',
+        'A full audit trail on every action.' => 'Une piste d’audit complète sur chaque action.',
     ];
 
     $d = [

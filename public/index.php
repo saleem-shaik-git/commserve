@@ -58,7 +58,7 @@ try {
     <div class="row align-items-center g-4">
       <div class="col-lg-7">
         <h1 class="fw-bold display-5 mb-3"><?=e(t('Banking that works as hard as you do'))?></h1>
-        <p class="fs-5 text-white-50 mb-4"><?=e(t('Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — secured by four-stage OTP verification and administrator approval on every transfer.'))?></p>
+        <p class="fs-5 text-white-50 mb-4"><?=e(t('Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — all in one secure app.'))?></p>
         <div class="d-flex gap-2 flex-wrap mb-4">
           <a href="<?=url('register.php')?>" class="btn btn-light btn-lg fw-semibold"><?=e(t('Open your account'))?> <i class="bi bi-arrow-right ms-1"></i></a>
           <a href="<?=url('login.php')?>" class="btn btn-outline-light btn-lg"><?=e(t('Sign in'))?></a>
@@ -197,7 +197,7 @@ try {
         <h3 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i><?=e(t('Bank-grade controls'))?></h3>
         <ul class="list-unstyled small mb-0">
           <li class="mb-2"><i class="bi bi-journal-bookmark-fill text-success me-2"></i><?=e(t('Double-entry ledger accounting — balances are computed, never overwritten.'))?></li>
-          <li><i class="bi bi-clipboard-check-fill text-success me-2"></i><?=e(t('Full audit trail on every action, with maker-checker on admin operations.'))?></li>
+          <li><i class="bi bi-clipboard-check-fill text-success me-2"></i><?=e(t('A full audit trail on every action.'))?></li>
         </ul>
       </div></div>
     </div>
