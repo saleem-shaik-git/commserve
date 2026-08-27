@@ -45,7 +45,7 @@ require __DIR__ . '/partials/sidebar.php';
           </div>
 
           <div class="text-center mb-4">
-            <div class="display-5 fw-bold">₦<?= number_format((float)$details['amount'],2) ?></div>
+            <div class="display-5 fw-bold">$<?= number_format((float)$details['amount'],2) ?></div>
             <div class="text-muted"><?= e($details['currency']) ?> · <?= e(ucfirst($details['type'])) ?></div>
           </div>
 

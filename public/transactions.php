@@ -86,7 +86,7 @@ require __DIR__ . '/partials/sidebar.php';
               <td class="small"><?= e(ucfirst($r['type'])) ?></td>
               <td class="small" style="max-width:200px"><?= e($r['description']) ?></td>
               <td><span class="badge <?= $r['entry_type']==='credit'?'text-bg-success':'text-bg-danger' ?>"><?= e(ucfirst($r['entry_type'])) ?></span></td>
-              <td class="fw-bold <?= $r['entry_type']==='credit'?'text-success':'text-danger' ?>"><?= $r['entry_type']==='credit'?'+':'-' ?>₦<?= number_format((float)$r['amount'],2) ?></td>
+              <td class="fw-bold <?= $r['entry_type']==='credit'?'text-success':'text-danger' ?>"><?= $r['entry_type']==='credit'?'+':'-' ?>$<?= number_format((float)$r['amount'],2) ?></td>
               <td><span class="badge text-bg-success"><?= e(ucfirst($r['status'])) ?></span></td>
             </tr>
           <?php endforeach; endif; ?>
@@ -104,7 +104,7 @@ require __DIR__ . '/partials/sidebar.php';
         <?php else: foreach ($pending as $p): ?>
           <div class="border rounded p-2 mb-2 small">
             <div class="d-flex justify-content-between"><span class="fw-semibold"><?= e($p['reference']) ?></span><span class="badge text-bg-warning"><?= e($p['status']) ?></span></div>
-            <div class="text-muted">₦<?= number_format((float)$p['amount'],2) ?> · <?= e($p['description']??'') ?></div>
+            <div class="text-muted">$<?= number_format((float)$p['amount'],2) ?> · <?= e($p['description']??'') ?></div>
             <a href="/commserve/public/transfer-confirm.php?ref=<?= urlencode($p['reference']) ?>" class="btn btn-sm btn-primary w-100 mt-2">Confirm OTP</a>
           </div>
         <?php endforeach; endif; ?>
@@ -115,9 +115,9 @@ require __DIR__ . '/partials/sidebar.php';
       <div class="card-header bg-white fw-bold">Account Summary</div>
       <div class="card-body">
         <?php foreach ($accounts as $a): ?>
-          <div class="d-flex justify-content-between small mb-2 <?= $a['id']===$accountId?'fw-bold':'' ?>"><span><?= e($a['type_name']) ?> ****<?= e(substr($a['account_number'],-4)) ?></span><span>₦<?= number_format((float)$a['available_balance'],2) ?></span></div>
+          <div class="d-flex justify-content-between small mb-2 <?= $a['id']===$accountId?'fw-bold':'' ?>"><span><?= e($a['type_name']) ?> ****<?= e(substr($a['account_number'],-4)) ?></span><span>$<?= number_format((float)$a['available_balance'],2) ?></span></div>
         <?php endforeach; ?>
-        <hr><div class="d-flex justify-content-between fw-bold"><span>Total</span><span>₦<?= number_format($totalBalance,2) ?></span></div>
+        <hr><div class="d-flex justify-content-between fw-bold"><span>Total</span><span>$<?= number_format($totalBalance,2) ?></span></div>
       </div>
     </div>
   </div>

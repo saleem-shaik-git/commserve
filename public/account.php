@@ -58,7 +58,7 @@ if (!$account):
       <div class="card-body p-4">
         <div class="text-center">
           <div class="bg-primary bg-opacity-10 rounded-circle d-inline-grid place-items-center" style="width:64px;height:64px;display:grid;place-items:center"><i class="bi bi-wallet2 text-primary fs-3"></i></div>
-          <h2 class="fw-bold mt-3">₦<?= number_format((float)$account['available_balance'],2) ?></h2>
+          <h2 class="fw-bold mt-3">$<?= number_format((float)$account['available_balance'],2) ?></h2>
           <div class="text-muted small">Available Balance</div>
           <span class="badge text-bg-success mt-2"><i class="bi bi-check-circle me-1"></i>Ledger Verified</span>
         </div>
@@ -85,11 +85,11 @@ if (!$account):
           $credits = array_sum(array_map(fn($t)=> $t['entry_type']==='credit'?(float)$t['amount']:0, $recentRange));
           $debits = array_sum(array_map(fn($t)=> $t['entry_type']==='debit'?(float)$t['amount']:0, $recentRange));
         ?>
-        <div class="d-flex justify-content-between mb-2"><span class="text-muted">Opening (<?= $from30 ?>)</span><strong>₦<?= number_format($opening30,2) ?></strong></div>
-        <div class="d-flex justify-content-between mb-2"><span class="text-success">Total Credits</span><strong class="text-success">+₦<?= number_format($credits,2) ?></strong></div>
-        <div class="d-flex justify-content-between mb-2"><span class="text-danger">Total Debits</span><strong class="text-danger">-₦<?= number_format($debits,2) ?></strong></div>
+        <div class="d-flex justify-content-between mb-2"><span class="text-muted">Opening (<?= $from30 ?>)</span><strong>$<?= number_format($opening30,2) ?></strong></div>
+        <div class="d-flex justify-content-between mb-2"><span class="text-success">Total Credits</span><strong class="text-success">+$<?= number_format($credits,2) ?></strong></div>
+        <div class="d-flex justify-content-between mb-2"><span class="text-danger">Total Debits</span><strong class="text-danger">-$<?= number_format($debits,2) ?></strong></div>
         <hr>
-        <div class="d-flex justify-content-between"><span class="fw-bold">Net Flow</span><strong>₦<?= number_format($credits-$debits,2) ?></strong></div>
+        <div class="d-flex justify-content-between"><span class="fw-bold">Net Flow</span><strong>$<?= number_format($credits-$debits,2) ?></strong></div>
       </div>
     </div>
   </div>
@@ -111,7 +111,7 @@ if (!$account):
               <td><a href="/commserve/public/transaction.php?ref=<?= urlencode($t['reference']) ?>" class="fw-semibold text-decoration-none small"><?= e($t['reference']) ?></a></td>
               <td class="small" style="max-width:220px"><?= e($t['description']) ?></td>
               <td><span class="badge <?= $t['entry_type']==='credit'?'text-bg-success':'text-bg-danger' ?>"><?= e($t['entry_type']) ?></span><br><small class="text-muted"><?= e($t['type']) ?></small></td>
-              <td class="fw-bold <?= $t['entry_type']==='credit'?'text-success':'text-danger' ?>"><?= $t['entry_type']==='credit'?'+':'-' ?>₦<?= number_format((float)$t['amount'],2) ?></td>
+              <td class="fw-bold <?= $t['entry_type']==='credit'?'text-success':'text-danger' ?>"><?= $t['entry_type']==='credit'?'+':'-' ?>$<?= number_format((float)$t['amount'],2) ?></td>
             </tr>
           <?php endforeach; endif; ?>
           </tbody>
