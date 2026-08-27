@@ -8,9 +8,12 @@ function nav_active(string $key, string $current): string { return $current === 
   <nav class="nav crumb-nav gap-1 flex-row flex-wrap align-items-center flex-lg-column align-items-lg-stretch" aria-label="<?=e(t('Menu'))?>">
     <a class="nav-link <?= nav_active('dashboard', $current) ?>" href="<?=url('dashboard.php')?>"><i class="bi bi-grid me-2"></i><?=e(t('Dashboard'))?></a>
     <a class="nav-link <?= nav_active('accounts', $current) ?>" href="<?=url('accounts.php')?>"><i class="bi bi-wallet2 me-2"></i><?=e(t('Accounts'))?></a>
+    <a class="nav-link <?= nav_active('savings', $current) ?>" href="<?=url('savings.php')?>"><i class="bi bi-piggy-bank me-2"></i><?=e(t('Savings'))?></a>
+    <a class="nav-link <?= nav_active('loans', $current) ?>" href="<?=url('loans.php')?>"><i class="bi bi-bank me-2"></i><?=e(t('Loans'))?></a>
     <a class="nav-link <?= nav_active('crypto', $current) ?>" href="<?=url('crypto.php')?>"><i class="bi bi-currency-bitcoin me-2"></i><?=e(t('Crypto'))?></a>
     <a class="nav-link <?= nav_active('transfer', $current) ?>" href="<?=url('transfer.php')?>"><i class="bi bi-send me-2"></i><?=e(t('Transfers'))?></a>
     <a class="nav-link <?= nav_active('transactions', $current) ?>" href="<?=url('transactions.php')?>"><i class="bi bi-receipt me-2"></i><?=e(t('Transactions'))?></a>
+    <a class="nav-link <?= nav_active('savings', $current) ?>" href="<?=url('fixed-deposits.php')?>"><i class="bi bi-lock me-2"></i><?=e(t('Fixed Deposits'))?></a>
     <a class="nav-link <?= nav_active('statements', $current) ?>" href="<?=url('statements.php')?>"><i class="bi bi-file-earmark-text me-2"></i><?=e(t('Statements'))?></a>
     <a class="nav-link <?= nav_active('beneficiaries', $current) ?>" href="<?=url('beneficiaries.php')?>"><i class="bi bi-person-lines-fill me-2"></i><?=e(t('Beneficiaries'))?></a>
     <a class="nav-link <?= nav_active('payments', $current) ?>" href="<?=url('bill-payments.php')?>"><i class="bi bi-lightning-charge me-2"></i><?=e(t('Bill Payments'))?></a>

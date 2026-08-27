@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/SecurityService.php';
+require_once __DIR__ . '/SavingsProductService.php';
 
 class TransferService
 {
@@ -65,6 +66,8 @@ class TransferService
             $to   = $toAccountId === (int)$first['id'] ? $first : $second;
 
             if ((int)$from['user_id'] !== $userId) throw new RuntimeException('Source account does not belong to you.');
+            // Savings-product withdrawal rules (locked/restricted products).
+            try { (new SavingsProductService($this->db))->assertWithdrawalAllowed($fromAccountId); } catch (PDOException $e) { if (!str_contains($e->getMessage(), 'savings_products')) throw $e; }
             if ($from['status'] !== 'active' || $to['status'] !== 'active') throw new RuntimeException('Both accounts must be active.');
             if ($from['currency'] !== $to['currency']) throw new RuntimeException('Currency mismatch between accounts.');
 

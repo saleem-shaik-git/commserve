@@ -114,6 +114,15 @@ An online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and Bootstrap 
 - Threads with subjects, unread badges on both sides, open/close/reopen, 5-second polling (no server daemon needed)
 - Buy/sell crypto against the fiat account balance at live USD rates (see Crypto section above)
 
+### Phase 16 — Retail Banking Products
+- **Configurable savings products** (Regular/Premium/Target/Student/Business Savings): rate, minimum opening & daily balance, interest frequency, withdrawal restrictions (none/limited/restricted/locked) and status - managed in **Admin → Banking Products**
+- **Interest engine**: daily balances derived from the ledger, interest accrued per product and **posted as real ledger entries** (`interest_credit` transactions + `interest_postings` audit); daily/monthly frequencies; idempotent per period (`scripts/run-daily-banking.php` or the admin engine button)
+- **Fixed/term deposits**: placement debits the account, simple interest at the product rate, maturity processing, early withdrawal with configurable interest penalty, payout posts to the ledger
+- **Lending**: application → KYC gate → credit-scored decision (auto-approve ≥700, manual review 600–699, reject <600) → admin approval → **disbursement** (ledger credit) → amortized monthly **repayment schedule** → ledger-backed repayments (interest first, then principal; prepayment supported) → late/default processing (3+ late installments = defaulted)
+- **Credit scoring (300–850)** from account age, activity, balances, loan/repayment history, failed payments, risk alerts and KYC
+- **Customer lifecycle**: Registered → KYC Pending → KYC Approved → Active → Dormant (computed) plus admin overrides (Restricted/Closed); visible on Admin → Customers
+- **Admin → Product Analytics**: deposits by product, interest expense, fixed-deposit book, loan portfolio, outstanding, repayment rate, default rate, adoption, lifecycle mix and a profitability simulation
+
 ## Setup
 
 1. Copy `.env.example` to `.env` and configure MySQL.
@@ -142,6 +151,7 @@ Task Scheduler, cron, or another local scheduler:
 ```bash
 php scripts/run-scheduled-payments.php   # due scheduled transfers/bill payments
 php scripts/process-notifications.php    # queued notification delivery
+php scripts/run-daily-banking.php        # interest posting, deposit maturities, loan arrears
 ```
 
 Optional integrity check (exits non-zero on mismatch):

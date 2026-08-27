@@ -7,6 +7,8 @@ $adminNav = [
     'dashboard'     => [t('Dashboard'), 'admin/'],
     'customers'     => [t('Customers'), 'admin/customers.php'],
     'accounts'      => [t('Accounts'), 'admin/accounts.php'],
+    'products'      => [t('Banking Products'), 'admin/products.php'],
+    'loans'         => [t('Lending'), 'admin/loans.php'],
     'transactions'  => [t('Transactions'), 'admin/transactions.php'],
     'approvals'     => [t('Approvals'), 'admin/approvals.php'],
     'limits'        => [t('Transfer Limits'), 'admin/limits.php'],
@@ -22,6 +24,7 @@ $adminNav = [
 $chatUnreadAdmin = 0;
 try { require_once dirname(__DIR__, 3) . '/app/Services/ChatService.php'; $chatUnreadAdmin = (new ChatService(Database::connection()))->unreadForAdmin(); } catch (Throwable $e) { $chatUnreadAdmin = 0; }
 $adminNav['chat'] = [t('Live Chat') . ($chatUnreadAdmin > 0 ? ' (' . $chatUnreadAdmin . ')' : ''), 'admin/support-chat.php'];
+$adminNav['analytics'] = [t('Product Analytics'), 'admin/analytics.php'];
 ?>
 <!doctype html>
 <html lang="<?= e(current_locale()) ?>">
