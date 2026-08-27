@@ -87,7 +87,7 @@ require __DIR__ . '/partials/sidebar.php';
         <div class="card border-0 shadow-sm mt-3">
           <div class="card-body p-3 text-center">
             <div class="small text-muted mb-2">Need help?</div>
-            <a href="/commserve/public/transfer.php" class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-send me-1"></i>Test Transfer Flow</a>
+            <a href="<?=url('transfer.php')?>" class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-send me-1"></i>Test Transfer Flow</a>
           </div>
         </div>
       </div>

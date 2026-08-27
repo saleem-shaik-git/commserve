@@ -9,7 +9,7 @@ $transferService = new TransferService($db);
 $accountService = new AccountService($db);
 
 $ref = trim($_GET['ref'] ?? '');
-if ($ref === '') redirect('/commserve/public/transactions.php');
+if ($ref === '') redirect(url('transactions.php'));
 
 try {
     $details = $transferService->getDetails($ref, (int)$user['id']);
@@ -29,7 +29,7 @@ require __DIR__ . '/partials/sidebar.php';
   <div class="col-lg-8">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h3 class="fw-bold mb-0"><i class="bi bi-receipt me-2"></i>Transfer Receipt</h3>
-      <a href="/commserve/public/transactions.php" class="btn btn-outline-secondary btn-sm">Back to transactions</a>
+      <a href="<?=url('transactions.php')?>" class="btn btn-outline-secondary btn-sm">Back to transactions</a>
     </div>
 
     <?php if (empty($details)): ?>
@@ -91,8 +91,8 @@ require __DIR__ . '/partials/sidebar.php';
 
       <div class="d-flex gap-2 mt-4">
         <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer me-2"></i>Print Receipt</button>
-        <a href="/commserve/public/transaction.php?ref=<?= urlencode($details['reference']) ?>" class="btn btn-outline-secondary"><i class="bi bi-eye me-2"></i>View Transaction</a>
-        <a href="/commserve/public/transfer.php" class="btn btn-outline-secondary"><i class="bi bi-send me-2"></i>New Transfer</a>
+        <a href="<?=url('transaction.php')?>?ref=<?= urlencode($details['reference']) ?>" class="btn btn-outline-secondary"><i class="bi bi-eye me-2"></i>View Transaction</a>
+        <a href="<?=url('transfer.php')?>" class="btn btn-outline-secondary"><i class="bi bi-send me-2"></i>New Transfer</a>
       </div>
 
       <?php if (!empty($details['events'])): ?>

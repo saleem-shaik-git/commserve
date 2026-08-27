@@ -35,7 +35,7 @@ final class BankingService
     {
         $this->assertPositiveAmount($amount);if($fromAccountId===$toAccountId)throw new RuntimeException('Source and destination accounts must differ.');if($userId===null)throw new RuntimeException('Authenticated user is required for transfers.');if($idempotencyKey!==null&&($existing=$this->security->assertIdempotency($idempotencyKey)))return $existing;$this->security->verifyTransactionPin($userId,(string)$transactionPin);
         // Phase 7 compliance gate runs before the ledger transaction is created.
-        $this->compliance->enforce($userId,$amount,'NGN');
+        $this->compliance->enforce($userId,$amount,DEFAULT_CURRENCY);
         $this->db->beginTransaction();
         try {
             $ids=[$fromAccountId,$toAccountId];sort($ids,SORT_NUMERIC);$first=$this->lockAccount($ids[0]);$second=$this->lockAccount($ids[1]);$from=$fromAccountId===(int)$first['id']?$first:$second;$to=$toAccountId===(int)$first['id']?$first:$second;

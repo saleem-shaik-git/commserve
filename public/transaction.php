@@ -8,7 +8,7 @@ $user = auth_user();
 $db = Database::connection();
 
 $ref = trim($_GET['ref'] ?? $_POST['reference'] ?? '');
-if ($ref === '') redirect('/commserve/public/transactions.php');
+if ($ref === '') redirect(url('transactions.php'));
 
 $accountService = new AccountService($db);
 $txService = new TransactionService($db);
@@ -50,9 +50,9 @@ require __DIR__ . '/partials/sidebar.php';
 
 <div class="row justify-content-center">
   <div class="col-lg-10">
-    <nav aria-label="breadcrumb" class="mb-3"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="/commserve/public/transactions.php">Transactions</a></li><li class="breadcrumb-item active"><?= e($ref) ?></li></ol></nav>
+    <nav aria-label="breadcrumb" class="mb-3"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="<?=url('transactions.php')?>">Transactions</a></li><li class="breadcrumb-item active"><?= e($ref) ?></li></ol></nav>
 
-    <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><a href="/commserve/public/transactions.php" class="btn btn-outline-secondary">Back</a><?php require __DIR__ . '/partials/footer.php'; exit; endif; ?>
+    <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><a href="<?=url('transactions.php')?>" class="btn btn-outline-secondary">Back</a><?php require __DIR__ . '/partials/footer.php'; exit; endif; ?>
 
     <div class="row g-4">
       <div class="col-lg-5">
@@ -63,7 +63,7 @@ require __DIR__ . '/partials/sidebar.php';
               <span class="badge fs-6 <?= ($tx['status']==='completed'?'text-bg-success':($tx['status']==='pending'?'text-bg-warning':'text-bg-secondary')) ?>"><?= e(strtoupper($tx['status'])) ?></span>
             </div>
             <div class="display-6 fw-bold mt-4">$<?= number_format((float)($tx['amount'] ?? 0),2) ?></div>
-            <div class="text-muted small"><?= e($tx['currency'] ?? 'NGN') ?> · <?= e($tx['description'] ?? '') ?></div>
+            <div class="text-muted small"><?= e($tx['currency'] ?? DEFAULT_CURRENCY) ?> · <?= e($tx['description'] ?? '') ?></div>
             <hr>
             <dl class="row small mb-0">
               <dt class="col-5 text-muted">Created</dt><dd class="col-7"><?= e($tx['created_at']) ?></dd>
@@ -74,10 +74,10 @@ require __DIR__ . '/partials/sidebar.php';
             </dl>
             <div class="d-grid gap-2 mt-4">
               <?php if (($tx['status'] ?? '') === 'pending'): ?>
-                <a href="/commserve/public/transfer-confirm.php?ref=<?= urlencode($ref) ?>" class="btn btn-primary"><i class="bi bi-shield-lock me-2"></i>Confirm with OTP</a>
+                <a href="<?=url('transfer-confirm.php')?>?ref=<?= urlencode($ref) ?>" class="btn btn-primary"><i class="bi bi-shield-lock me-2"></i>Confirm with OTP</a>
               <?php endif; ?>
-              <a href="/commserve/public/transfer-receipt.php?ref=<?= urlencode($ref) ?>" class="btn btn-outline-primary"><i class="bi bi-receipt me-2"></i>View Receipt</a>
-              <a href="/commserve/public/transactions.php" class="btn btn-outline-secondary">Back to Transactions</a>
+              <a href="<?=url('transfer-receipt.php')?>?ref=<?= urlencode($ref) ?>" class="btn btn-outline-primary"><i class="bi bi-receipt me-2"></i>View Receipt</a>
+              <a href="<?=url('transactions.php')?>" class="btn btn-outline-secondary">Back to Transactions</a>
             </div>
           </div>
         </div>

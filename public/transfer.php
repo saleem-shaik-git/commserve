@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['demo_otps'][$result['reference']] = ['otp'=>$result['otp'], 'expires'=>$result['expires_at'] ?? ''];
         }
         // Redirect to confirmation page
-        redirect('/commserve/public/transfer-confirm.php?ref=' . urlencode($result['reference']));
+        redirect(url('transfer-confirm.php?ref=') . urlencode($result['reference']));
     } catch (Throwable $e) {
         $error = $e->getMessage();
     }
@@ -115,7 +115,7 @@ require __DIR__ . '/partials/sidebar.php';
           <!-- BENEFICIARY -->
           <div class="tab-pane fade <?= $type==='beneficiary'?'show active':'' ?>" id="beneficiary">
             <h5 class="fw-bold">Beneficiary Transfer</h5><p class="text-muted small">Send to saved beneficiaries. Add new ones in Beneficiaries page.</p>
-            <?php if (empty($beneficiaries)): ?><div class="alert alert-warning">No beneficiaries. <a href="/commserve/public/beneficiaries.php">Add one</a></div>
+            <?php if (empty($beneficiaries)): ?><div class="alert alert-warning">No beneficiaries. <a href="<?=url('beneficiaries.php')?>">Add one</a></div>
             <?php else: ?>
             <form method="post" class="mt-3">
               <?= csrf_field() ?>

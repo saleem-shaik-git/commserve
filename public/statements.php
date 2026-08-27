@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['format'])) {
             $account = $statementService->getAccount((int)$user['id'], $selectedAccountId);
             // If POST with generate button, redirect to download URL to avoid re-POST issues, but also handle direct GET
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $url = '/commserve/public/statement-download.php?account=' . $selectedAccountId . '&from=' . urlencode($from) . '&to=' . urlencode($to) . '&format=' . urlencode($format);
+                $url = url('statement-download.php?account=') . $selectedAccountId . '&from=' . urlencode($from) . '&to=' . urlencode($to) . '&format=' . urlencode($format);
                 redirect($url);
             }
         } catch (Throwable $e) {
@@ -125,8 +125,8 @@ require __DIR__ . '/partials/sidebar.php';
                   <div class="fw-semibold"><?= e($label) ?></div>
                   <div class="small text-muted"><?= e($m) ?></div>
                   <div class="d-flex gap-1 mt-2">
-                    <a href="/commserve/public/statement-download.php?account=<?= $selectedAccountId ?>&month=<?= $m ?>&format=pdf" class="btn btn-sm btn-outline-primary">PDF</a>
-                    <a href="/commserve/public/statement-download.php?account=<?= $selectedAccountId ?>&month=<?= $m ?>&format=csv" class="btn btn-sm btn-outline-secondary">CSV</a>
+                    <a href="<?=url('statement-download.php')?>?account=<?= $selectedAccountId ?>&month=<?= $m ?>&format=pdf" class="btn btn-sm btn-outline-primary">PDF</a>
+                    <a href="<?=url('statement-download.php')?>?account=<?= $selectedAccountId ?>&month=<?= $m ?>&format=csv" class="btn btn-sm btn-outline-secondary">CSV</a>
                   </div>
                 </div>
               </div>
@@ -160,7 +160,7 @@ require __DIR__ . '/partials/sidebar.php';
         <?php foreach ($accounts as $a): ?>
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div><div class="fw-semibold small"><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?></div><div class="small text-muted">$<?= number_format((float)$a['available_balance'],2) ?></div></div>
-            <a href="/commserve/public/statements.php?account=<?= $a['id'] ?>" class="btn btn-sm btn-outline-primary">Select</a>
+            <a href="<?=url('statements.php')?>?account=<?= $a['id'] ?>" class="btn btn-sm btn-outline-primary">Select</a>
           </div>
         <?php endforeach; ?>
       </div>

@@ -116,6 +116,8 @@ final class AccountService
 
     public function getOpeningBalance(int $accountId, ?string $fromDate): float
     {
+        // No start date = statement begins at account inception (balance 0
+        // before the first ledger entry), so 0.0 is correct by definition.
         if (!$fromDate) return 0.0;
         $stmt = $this->db->prepare(
             'SELECT COALESCE(SUM(CASE WHEN le.entry_type="credit" THEN le.amount ELSE -le.amount END),0)

@@ -1,6 +1,6 @@
 USE commserve;
 INSERT INTO roles (name) VALUES ('customer'),('admin') ON DUPLICATE KEY UPDATE name=VALUES(name);
-INSERT INTO account_types (name,currency,minimum_balance) VALUES ('Savings','NGN',0),('Current','NGN',0) ON DUPLICATE KEY UPDATE name=VALUES(name);
+INSERT INTO account_types (name,currency,minimum_balance) VALUES ('Savings','USD',0),('Current','USD',0) ON DUPLICATE KEY UPDATE name=VALUES(name);
 
 -- Demo password for all seeded users: password
 SET @pw = '$2y$12$e168JUMgLVhnQ6L7JGrdu.KvDbGx0c/SFSI9caGTzsMYyemiKc7BC';
@@ -15,7 +15,7 @@ INSERT INTO accounts (user_id,account_type_id,account_number,available_balance) 
 
 -- Opening simulated balances are represented in the ledger so the ledger remains the source of truth.
 INSERT INTO transactions (reference,type,status,amount,currency,description,completed_at)
-SELECT CONCAT('OPEN-',a.account_number),'deposit','completed',a.available_balance,'NGN','Opening simulated balance',CURRENT_TIMESTAMP
+SELECT CONCAT('OPEN-',a.account_number),'deposit','completed',a.available_balance,'USD','Opening simulated balance',CURRENT_TIMESTAMP
 FROM accounts a
 WHERE a.account_number IN ('0100000001','0100000002','0100000003')
   AND NOT EXISTS (SELECT 1 FROM transactions t WHERE t.reference=CONCAT('OPEN-',a.account_number));
