@@ -3,7 +3,7 @@ $current = $currentPage ?? '';
 function nav_active(string $key, string $current): string { return $current === $key ? 'active' : ''; }
 ?>
 <aside class="col-lg-2 sidebar p-3 bg-white border-end">
-  <div class="d-lg-none mb-3"><div class="card hero-card border-0"><div class="card-body p-3 text-white"><div class="small text-white-50">Total Balance</div><div class="fw-bold fs-5">₦<?= number_format($totalBalance ?? 0, 2) ?></div></div></div></div>
+  <div class="d-lg-none mb-3"><div class="card hero-card border-0"><div class="card-body p-3 text-white"><div class="small text-white-50">Total Balance</div><div class="fw-bold fs-5">$<?= number_format($totalBalance ?? 0, 2) ?></div></div></div></div>
   <nav class="nav flex-column gap-1">
     <a class="nav-link <?= nav_active('dashboard', $current) ?>" href="/commserve/public/dashboard.php"><i class="bi bi-grid me-2"></i>Dashboard</a>
     <a class="nav-link <?= nav_active('accounts', $current) ?>" href="/commserve/public/accounts.php"><i class="bi bi-wallet2 me-2"></i>Accounts</a>
