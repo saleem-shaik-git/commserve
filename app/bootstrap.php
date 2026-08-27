@@ -12,6 +12,10 @@ if (is_file($envFile)) {
 function env(string $key, mixed $default = null): mixed { return $_ENV[$key] ?? $default; }
 define('BASE_PATH', dirname(__DIR__));
 define('PUBLIC_PATH', BASE_PATH . '/public');
-define('APP_NAME', (string) env('APP_NAME', 'CommServe Bank'));
+$appName = trim((string) env('APP_NAME', 'CommServe Bank'));
+// Self-heal the legacy demo name so deployments with an old .env
+// (APP_NAME=CommServe Demo Bank) display the correct brand.
+if (strcasecmp($appName, 'CommServe Demo Bank') === 0) $appName = 'CommServe Bank';
+define('APP_NAME', $appName);
 define('DEFAULT_CURRENCY', (string) env('DEFAULT_CURRENCY', 'USD'));
 define('DEFAULT_LOCALE', (string) env('DEFAULT_LOCALE', 'en'));
