@@ -18,6 +18,7 @@ function nav_active(string $key, string $current): string { return $current === 
     <a class="nav-link <?= nav_active('cards', $current) ?>" href="<?=url('cards.php')?>"><i class="bi bi-credit-card me-2"></i><?=e(t('Cards & ATM'))?></a>
     <a class="nav-link <?= nav_active('pin', $current) ?>" href="<?=url('transaction-pin.php')?>"><i class="bi bi-shield-lock me-2"></i><?=e(t('Transaction PIN'))?></a>
     <span class="crumb-divider mt-3 small text-muted text-uppercase fw-semibold d-none d-lg-block"><?=e(t('Support'))?></span>
+    <a class="nav-link <?= nav_active('chat', $current) ?>" href="<?=url('support-chat.php')?>"><i class="bi bi-chat-dots me-2"></i><?=e(t('Live Chat'))?><?php if(!empty($chat_unread)):?> <span class="badge text-bg-danger ms-1"><?=(int)$chat_unread?></span><?php endif; ?></a>
     <a class="nav-link <?= nav_active('notifications', $current) ?>" href="<?=url('notifications.php')?>"><i class="bi bi-bell me-2"></i><?=e(t('Notifications'))?></a>
     <a class="nav-link <?= nav_active('security', $current) ?>" href="<?=url('security-activity.php')?>"><i class="bi bi-shield-check me-2"></i><?=e(t('Security'))?></a>
   </nav>

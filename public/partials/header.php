@@ -1,6 +1,13 @@
 <?php
 // Shared header for customer pages
 if (!isset($user)) $user = auth_user();
+// Unread admin replies for the sidebar Live Chat badge (best effort).
+$chat_unread = 0;
+try {
+    $dbChat = Database::connection();
+    require_once dirname(__DIR__) . '/app/Services/ChatService.php';
+    $chat_unread = (new ChatService($dbChat))->unreadForCustomer((int)$user['id']);
+} catch (Throwable $e) { $chat_unread = 0; }
 ?>
 <!doctype html>
 <html lang="<?= e(current_locale()) ?>">

@@ -49,3 +49,15 @@ body{background:#f5f7fb;color:#1f2937;font-family:Inter,system-ui,-apple-system,
 .receipt-card{border:2px dashed #cbd5e1;background:#fff}
 .receipt-divider{border-top:2px dashed #e2e8f0;margin:1rem 0}
 .mini-stat{font-size:.8rem;color:#6b7280;text-transform:uppercase;letter-spacing:.5px}
+
+/* ===== Live chat ===== */
+.chat-window{max-height:60vh;overflow-y:auto;background:#f8f9fb}
+.chat-row{display:flex;margin-bottom:10px}
+.chat-me{justify-content:flex-end}
+.chat-them{justify-content:flex-start}
+.chat-bubble{max-width:78%;padding:10px 14px;border-radius:16px;background:#fff;border:1px solid #e9ecef}
+.chat-me .chat-bubble{background:#0d6efd;color:#fff;border-color:#0d6efd;border-bottom-right-radius:4px}
+.chat-them .chat-bubble{border-bottom-left-radius:4px}
+.chat-me .chat-bubble .chat-time{color:rgba(255,255,255,.75)}
+.chat-body{white-space:pre-wrap;word-break:break-word}
+.rate-badge{font-size:.65rem}

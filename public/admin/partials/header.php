@@ -18,6 +18,10 @@ $adminNav = [
     'executive'     => [t('Executive Intelligence'), 'admin/executive.php'],
     'funding'       => [t('Account Funding'), 'admin/funding.php'],
 ];
+// Unread customer messages badge (best effort).
+$chatUnreadAdmin = 0;
+try { require_once dirname(__DIR__, 2) . '/app/Services/ChatService.php'; $chatUnreadAdmin = (new ChatService(Database::connection()))->unreadForAdmin(); } catch (Throwable $e) { $chatUnreadAdmin = 0; }
+$adminNav['chat'] = [t('Live Chat') . ($chatUnreadAdmin > 0 ? ' (' . $chatUnreadAdmin . ')' : ''), 'admin/support-chat.php'];
 ?>
 <!doctype html>
 <html lang="<?= e(current_locale()) ?>">

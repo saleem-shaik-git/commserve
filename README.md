@@ -93,10 +93,12 @@ An online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and Bootstrap 
 - Full interface translation (navigation, pages, forms, statuses, admin console) and localized dates
 - Versioned data normalization migrations (015–018)
 
-### Crypto — Multi-Asset Wallets
-- Per-user wallets for BTC, ETH, USDT, USDC, XRP at bank-configured reference rates
-- Receive, PIN-verified send, cross-asset conversion
-- Separate `crypto_*` ledger (sandboxed from the fiat ledger by design)
+### Crypto — Multi-Asset Wallets & Live-Rate Trading
+- Per-user wallets for BTC, ETH, USDT, USDC, XRP
+- **Live USD rates** from a public market feed (CoinGecko simple price, refreshed at most once a minute, cached in `crypto_assets`); automatic fallback to the bank reference rate when the feed is unreachable
+- **Buy crypto with account balance and sell back to the account** — fiat legs post through the ledger (`crypto_purchase` / `crypto_sale` transactions); crypto legs through the crypto ledger
+- Receive, PIN-verified send, cross-asset conversion at live rates
+- Separate `crypto_*` ledger (sandboxed from the fiat ledger by design, joined only by buy/sell)
 
 ### Phase 12 / 13 — 4-Stage OTP Transfers with Admin Approval of Every Stage
 - Transfers require **four sequential OTP stages**: Identity → Amount → Beneficiary → Final authorization
@@ -107,6 +109,11 @@ An online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and Bootstrap 
   - Approving stage 4 is the final sign-off: it releases the transfer — the ledger entries post atomically with account locking and re-validated balances
 - Customers are notified at each decision point (`otp_stage_approved`, `otp_stage_rejected`, `transfer_completed`, `transfer_rejected`)
 - Ledger entries only post on admin approval — funds never move on OTP verification alone
+
+### Phase 14 — Live Chat & Crypto Trading
+- Live chat between customers and administrators (`support-chat.php` <-> `admin/support-chat.php`)
+- Threads with subjects, unread badges on both sides, open/close/reopen, 5-second polling (no server daemon needed)
+- Buy/sell crypto against the fiat account balance at live USD rates (see Crypto section above)
 
 ## Setup
 
