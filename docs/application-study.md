@@ -1,7 +1,6 @@
-# CommServe Demo Bank — Full Application Study
+# CommServe Bank — Full Application Study (historical)
 
-> Fresh end-to-end review of every file in the repository (as of branch `arena/01a0410c-commserve`, commit `34bfdd8` / PR #9 merge).
-> **DEMO ONLY** — simulated money, no real banking rails.
+> Historical study snapshot (branch `arena/01a0410c-commserve`, commit `34bfdd8` / PR #9 merge) — predates phase 13 (per-stage OTP admin approval, full interface translation and wording updates). Kept for reference; see README for the current state.
 
 ---
 

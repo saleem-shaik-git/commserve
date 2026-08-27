@@ -16,27 +16,26 @@ if (!isset($user)) $user = auth_user();
 <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top shadow-sm">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?=url('dashboard.php')?>">
-      <span class="brand-mark-sm">C</span> CommServe <span class="badge text-bg-warning ms-1">DEMO</span>
+      <span class="brand-mark-sm">C</span> CommServe
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"><span class="navbar-toggler-icon"></span></button>
     <div class="collapse navbar-collapse" id="topNav">
       <div class="ms-auto d-flex align-items-center gap-3 flex-wrap">
-        <span class="text-muted small d-none d-md-inline">Simulated environment — no real funds</span>
         <div class="d-flex align-items-center gap-2">
           <i class="bi bi-translate text-muted"></i>
           <?= language_selector('form-select form-select-sm w-auto') ?>
         </div>
         <div class="dropdown">
           <a class="btn btn-light btn-sm dropdown-toggle" href="#" data-bs-toggle="dropdown">
-            <i class="bi bi-person-circle me-1"></i> <?= e($user['name'] ?? $user['email'] ?? 'User') ?>
+            <i class="bi bi-person-circle me-1"></i> <?= e($user['name'] ?? $user['email'] ?? t('User')) ?>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="<?=url('transaction-pin.php')?>"><i class="bi bi-shield-lock me-2"></i>Transaction PIN</a></li>
+            <li><a class="dropdown-item" href="<?=url('transaction-pin.php')?>"><i class="bi bi-shield-lock me-2"></i><?=e(t('Transaction PIN'))?></a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
               <form method="post" action="<?= url('logout.php') ?>" class="px-3">
                 <?= csrf_field() ?>
-                <button class="btn btn-outline-danger btn-sm w-100">Logout</button>
+                <button class="btn btn-outline-danger btn-sm w-100"><?=e(t('Logout'))?></button>
               </form>
             </li>
           </ul>

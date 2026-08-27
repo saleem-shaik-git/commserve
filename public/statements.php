@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['format'])) {
     }
 }
 
-$pageTitle = 'Statements';
+$pageTitle = t('Statements');
 $currentPage = 'statements';
 require __DIR__ . '/partials/header.php';
 require __DIR__ . '/partials/sidebar.php';
@@ -54,10 +54,10 @@ require __DIR__ . '/partials/sidebar.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
-    <h3 class="fw-bold mb-1">Statements</h3>
-    <p class="text-muted mb-0">Generate PDF or CSV statements — date-range, monthly, full history. Ledger-backed.</p>
+    <h3 class="fw-bold mb-1"><?=e(t('Statements'))?></h3>
+    <p class="text-muted mb-0"><?=e(t('Generate PDF or CSV statements — date-range, monthly, full history. Ledger-backed.'))?></p>
   </div>
-  <span class="badge text-bg-primary"><i class="bi bi-file-earmark-text me-1"></i>PDF & CSV</span>
+  <span class="badge text-bg-primary"><i class="bi bi-file-earmark-text me-1"></i><?=e(t('PDF'))?> & <?=e(t('CSV'))?></span>
 </div>
 
 <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
@@ -65,60 +65,60 @@ require __DIR__ . '/partials/sidebar.php';
 <div class="row g-4">
   <div class="col-lg-8">
     <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-arrow-down me-2"></i>Generate Statement</h5></div>
+      <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-arrow-down me-2"></i><?=e(t('Generate Statement'))?></h5></div>
       <div class="card-body p-4">
         <form method="post" class="row g-3">
           <?= csrf_field() ?>
           <div class="col-md-6">
-            <label class="form-label">Account</label>
+            <label class="form-label"><?=e(t('Account'))?></label>
             <select name="account_id" class="form-select" required>
-              <option value="">Select account</option>
+              <option value=""><?=e(t('Select account'))?></option>
               <?php foreach ($accounts as $a): ?>
                 <option value="<?= $a['id'] ?>" <?= $selectedAccountId===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · $<?= number_format((float)$a['available_balance'],2) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Format</label>
+            <label class="form-label"><?=e(t('Format'))?></label>
             <select name="format" class="form-select" required>
               <option value="pdf" <?= $format==='pdf'?'selected':'' ?>>PDF</option>
               <option value="csv" <?= $format==='csv'?'selected':'' ?>>CSV</option>
             </select>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Quick Month</label>
+            <label class="form-label"><?=e(t('Quick Month'))?></label>
             <input type="month" class="form-control" id="monthPicker" value="<?= e(substr($from,0,7)) ?>">
           </div>
           <div class="col-md-6">
-            <label class="form-label">From Date</label>
+            <label class="form-label"><?=e(t('From Date'))?></label>
             <input type="date" name="from_date" class="form-control" value="<?= e($from) ?>" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label">To Date</label>
+            <label class="form-label"><?=e(t('To Date'))?></label>
             <input type="date" name="to_date" class="form-control" value="<?= e($to) ?>" required>
           </div>
           <div class="col-12">
-            <div class="alert alert-info small mb-0"><i class="bi bi-info-circle me-2"></i><strong>PDF</strong> includes opening/closing balances, running balance, and is printable. <strong>CSV</strong> is spreadsheet-friendly with same data. Both are generated from ledger (source of truth).</div>
+            <div class="alert alert-info small mb-0"><i class="bi bi-info-circle me-2"></i><?=e(t('PDF includes opening/closing balances, running balance, and is printable. CSV is spreadsheet-friendly with same data. Both are generated from the ledger (source of truth).'))?></div>
           </div>
           <div class="col-12">
-            <button class="btn btn-primary w-100 py-2"><i class="bi bi-download me-2"></i>Generate & Download Statement</button>
+            <button class="btn btn-primary w-100 py-2"><i class="bi bi-download me-2"></i><?=e(t('Generate & Download Statement'))?></button>
           </div>
         </form>
 
         <hr class="my-4">
 
-        <h6 class="fw-bold">Date-range shortcuts</h6>
+        <h6 class="fw-bold"><?=e(t('Date-range shortcuts'))?></h6>
         <div class="d-flex flex-wrap gap-2 mt-2">
-          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-m-d') ?>&to=<?= date('Y-m-d') ?>&format=pdf" class="btn btn-sm btn-outline-secondary">Today PDF</a>
-          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-m-d', strtotime('-7 days')) ?>&to=<?= date('Y-m-d') ?>&format=pdf" class="btn btn-sm btn-outline-secondary">Last 7 days</a>
-          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-m-01') ?>&to=<?= date('Y-m-d') ?>&format=pdf" class="btn btn-sm btn-outline-secondary">This month</a>
-          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-m-01', strtotime('-1 month')) ?>&to=<?= date('Y-m-t', strtotime('-1 month')) ?>&format=pdf" class="btn btn-sm btn-outline-secondary">Last month</a>
-          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-01-01') ?>&to=<?= date('Y-m-d') ?>&format=pdf" class="btn btn-sm btn-outline-secondary">This year</a>
+          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-m-d') ?>&to=<?= date('Y-m-d') ?>&format=pdf" class="btn btn-sm btn-outline-secondary"><?=e(t('Today PDF'))?></a>
+          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-m-d', strtotime('-7 days')) ?>&to=<?= date('Y-m-d') ?>&format=pdf" class="btn btn-sm btn-outline-secondary"><?=e(t('Last 7 days'))?></a>
+          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-m-01') ?>&to=<?= date('Y-m-d') ?>&format=pdf" class="btn btn-sm btn-outline-secondary"><?=e(t('This month'))?></a>
+          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-m-01', strtotime('-1 month')) ?>&to=<?= date('Y-m-t', strtotime('-1 month')) ?>&format=pdf" class="btn btn-sm btn-outline-secondary"><?=e(t('Last month'))?></a>
+          <a href="?account=<?= $selectedAccountId ?>&from=<?= date('Y-01-01') ?>&to=<?= date('Y-m-d') ?>&format=pdf" class="btn btn-sm btn-outline-secondary"><?=e(t('This year'))?></a>
         </div>
 
-        <h6 class="fw-bold mt-4">Monthly statements</h6>
+        <h6 class="fw-bold mt-4"><?=e(t('Monthly statements'))?></h6>
         <div class="row g-2 mt-1">
-          <?php for ($i=0;$i<6;$i++): $m = date('Y-m', strtotime("-$i month")); $label = date('M Y', strtotime($m.'-01')); ?>
+          <?php for ($i=0;$i<6;$i++): $m = date('Y-m', strtotime("-$i month")); $label = format_date($m.'-01','M Y'); ?>
             <div class="col-6 col-md-4">
               <div class="card border">
                 <div class="card-body p-3">
@@ -139,28 +139,28 @@ require __DIR__ . '/partials/sidebar.php';
 
   <div class="col-lg-4">
     <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white fw-bold"><i class="bi bi-info-circle me-2"></i>What’s in a statement?</div>
+      <div class="card-header bg-white fw-bold"><i class="bi bi-info-circle me-2"></i><?=e(t('What\'s in a statement?'))?></div>
       <div class="card-body small">
         <ul class="mb-0">
-          <li>Account number, type, currency, customer</li>
-          <li>Period, opening & closing balances (ledger-calculated)</li>
-          <li>All completed transactions in date range, running balance</li>
-          <li>Reference, type, description, debit/credit, status</li>
-          <li>Generated timestamp, DEMO watermark</li>
+          <li><?=e(t('Account number, type, currency, customer'))?></li>
+          <li><?=e(t('Period, opening & closing balances (ledger-calculated)'))?></li>
+          <li><?=e(t('All completed transactions in date range, running balance'))?></li>
+          <li><?=e(t('Reference, type, description, debit/credit, status'))?></li>
+          <li><?=e(t('Generated timestamp'))?></li>
         </ul>
         <hr>
-        <div class="text-muted"><strong>PDF:</strong> Uses pure-PHP generator (no external libs), A4, Helvetica, printable, valid without signature.</div>
-        <div class="text-muted mt-2"><strong>CSV:</strong> Excel/Sheets compatible, includes same fields.</div>
+        <div class="text-muted"><strong><?=e(t('PDF'))?>:</strong> <?=e(t('Uses pure-PHP generator (no external libs), A4, Helvetica, printable, valid without signature.'))?></div>
+        <div class="text-muted mt-2"><strong><?=e(t('CSV'))?>:</strong> <?=e(t('Excel/Sheets compatible, includes same fields.'))?></div>
       </div>
     </div>
 
     <div class="card border-0 shadow-sm mt-3">
-      <div class="card-header bg-white fw-bold">Your Accounts</div>
+      <div class="card-header bg-white fw-bold"><?=e(t('Your Accounts'))?></div>
       <div class="card-body">
         <?php foreach ($accounts as $a): ?>
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div><div class="fw-semibold small"><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?></div><div class="small text-muted">$<?= number_format((float)$a['available_balance'],2) ?></div></div>
-            <a href="<?=url('statements.php')?>?account=<?= $a['id'] ?>" class="btn btn-sm btn-outline-primary">Select</a>
+            <a href="<?=url('statements.php')?>?account=<?= $a['id'] ?>" class="btn btn-sm btn-outline-primary"><?=e(t('Select'))?></a>
           </div>
         <?php endforeach; ?>
       </div>

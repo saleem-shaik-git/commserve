@@ -37,7 +37,7 @@ final class AccountService
 
     public function getAvailableBalance(int $userId): float
     {
-        // For demo, available = total active
+        // Available = total of active accounts
         return $this->getTotalBalance($userId);
     }
 

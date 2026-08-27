@@ -1,8 +1,6 @@
-# CommServe Demo Bank
+# CommServe Bank
 
-A simulated online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and Bootstrap 5.
-
-> **DEMO ONLY:** This application uses simulated money and does not connect to real banking rails, card networks, blockchains or payment providers. No real funds are processed.
+An online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and Bootstrap 5.
 
 ## Implemented phases
 
@@ -26,7 +24,7 @@ A simulated online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and B
 - Transaction events
 - Reconciliation
 - Safe migration runner/versioning
-- Demo opening balances and funding
+- Opening balances and account funding
 
 ### Phase 3 — Banking Operations/Admin
 - Customer and account operations
@@ -47,7 +45,7 @@ A simulated online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and B
 - Transaction PIN/security controls
 
 ### Phase 5 — Payments & Scheduled Payments
-- Simulated biller catalogue (electricity, internet, cable, airtime, data, water)
+- Biller catalogue (electricity, internet, cable, airtime, data, water)
 - Ledger-backed bill payments
 - Transaction PIN + OTP confirmation
 - Bill-payment idempotency
@@ -60,14 +58,14 @@ A simulated online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and B
 - Admin biller catalogue and payment metrics
 
 ### Phase 6 — Cards & ATM
-- Simulated virtual/debit cards (demo Visa/Mastercard networks)
+- Virtual/debit cards (Visa/Mastercard-style networks)
 - Card numbers/CVV stored hashed; full details shown once at issuance
 - Card freeze/unfreeze, card PIN, per-card daily and per-transaction limits
 - Online/POS card payments with idempotency
-- ATM withdrawal simulator with terminals
+- ATM withdrawals with terminals
 
 ### Phase 7 — Compliance & Risk
-- Simulated KYC submission and admin review
+- KYC submission and admin review
 - Risk rules: high-value, very-high-value, velocity (10/20 per 24h), new-account activity, KYC-gated
 - Risk scoring with high/critical enforcement gates
 - Risk alert workflow (reviewing/cleared/blocked) and compliance event log
@@ -76,7 +74,7 @@ A simulated online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and B
 - Template-driven notifications (in-app, email, sms)
 - Per-user channel preferences
 - Queued delivery with retries (`scripts/process-notifications.php`)
-- Email via PHP `mail()`; SMS intentionally unconfigured in demo mode
+- Email via PHP `mail()`; SMS requires an external provider to be configured
 
 ### Phase 9 — Security Hardening
 - Login lockout (8 failed attempts / 15 minutes per email or IP)
@@ -92,26 +90,29 @@ A simulated online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and B
 ### Phase 11 — USD Currency & Internationalization
 - Default currency USD across schema and UI
 - English / Spanish / French interface with per-user persisted locale
+- Full interface translation (navigation, pages, forms, statuses, admin console) and localized dates
 - Versioned data normalization migrations (015–018)
 
-### Crypto — Simulated Multi-Asset Wallets
-- Per-user wallets for BTC, ETH, USDT, USDC, XRP at static demo rates
-- Simulated receive, PIN-verified send, cross-asset conversion
+### Crypto — Multi-Asset Wallets
+- Per-user wallets for BTC, ETH, USDT, USDC, XRP at bank-configured reference rates
+- Receive, PIN-verified send, cross-asset conversion
 - Separate `crypto_*` ledger (sandboxed from the fiat ledger by design)
 
-### Phase 12 — 4-Stage OTP Transfers with Admin Approval
+### Phase 12 / 13 — 4-Stage OTP Transfers with Admin Approval of Every Stage
 - Transfers require **four sequential OTP stages**: Identity → Amount → Beneficiary → Final authorization
 - Each stage issues a fresh 6-digit OTP (hashed, 10-minute expiry, 5 attempts per stage); a stage stepper tracks progress on the confirmation page
-- After stage 4 the transaction becomes `awaiting_approval` and an approval request is raised automatically
-- Admins release or reject transfers from **Admin → Approvals** (release posts the ledger entries atomically with account locking and re-validated balances; rejection fails the transaction with a reason)
-- Customers are notified at each decision point (`transfer_pending_approval`, `transfer_completed`, `transfer_rejected`)
-- Ledger entries only post on admin release — funds never move on OTP verification alone
+- **Every submitted OTP stage (1–4) is queued for administrator approval** (`Admin → Approvals`, action type `otp_stage_approval`):
+  - Approving stages 1–3 marks the stage approved and issues the OTP for the next stage (the customer is notified and sees the new OTP on the confirmation page)
+  - Rejecting a stage fails the transfer with a reason and notifies the customer
+  - Approving stage 4 is the final sign-off: it releases the transfer — the ledger entries post atomically with account locking and re-validated balances
+- Customers are notified at each decision point (`otp_stage_approved`, `otp_stage_rejected`, `transfer_completed`, `transfer_rejected`)
+- Ledger entries only post on admin approval — funds never move on OTP verification alone
 
 ## Setup
 
 1. Copy `.env.example` to `.env` and configure MySQL.
 2. Create the database and import `database/schema.sql`.
-3. Import `database/seed.sql` for demo accounts.
+3. Import `database/seed.sql` for the seeded accounts.
 4. Point Apache/Nginx document root to `public/`. The app is served under
    `/commserve` by default (base path auto-detected; override with `BASE_PATH`
    in `.env` when the document root already is `public/`).
@@ -143,20 +144,17 @@ Optional integrity check (exits non-zero on mismatch):
 php database/reconcile.php
 ```
 
-The workers only process simulated CommServe transactions and never contact
-external payment networks.
-
 ## Security notes
 
 - All state-changing forms are CSRF-protected; passwords and transaction PINs
   are bcrypt-hashed; OTPs are SHA-256-hashed and expire.
-- Demo OTPs are displayed on screen because there is no real SMS/email gateway
-  in demo mode.
-- Change seeded passwords before using outside a local demo environment.
+- OTPs are displayed on the confirmation page because no SMS/voice gateway is
+  configured; the display copy is stored alongside the hash (migration 020).
+- Change seeded passwords before using outside a local environment.
 
-## Demo accounts
+## Seeded accounts
 
-Demo accounts are documented in `database/seed.sql`:
+Seeded accounts are documented in `database/seed.sql`:
 
 | Login | Role | Password |
 |---|---|---|

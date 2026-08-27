@@ -45,6 +45,6 @@ final class NotificationService
             if(!@mail($email,$n['title'],$n['message'],$headers)) throw new RuntimeException('Email delivery failed.');
             return;
         }
-        if($n['channel']==='sms') throw new RuntimeException('SMS provider is not configured in demo mode.');
+        if($n['channel']==='sms') throw new RuntimeException('SMS provider is not configured.');
     }
 }

@@ -46,6 +46,6 @@ function require_auth(): void { if (!auth_user()) redirect(url('login.php')); }
 function require_role(string $role): void { require_auth(); if ((auth_user()['role'] ?? '') !== $role) { http_response_code(403); exit('Forbidden'); } }
 function currency_symbol(string $currency='USD'): string { $c=strtoupper(trim($currency));return match($c){'USD'=>'$','EUR'=>'€','GBP'=>'£','NGN'=>'₦','JPY'=>'¥',default=>$c.' '}; }
 function format_money(float|string $amount, string $currency='USD'): string { return currency_symbol($currency).number_format((float)$amount,2); }
-function format_date(?string $date, string $fmt='M d, Y'): string { if(!$date) return '-'; $ts=strtotime($date); return $ts?date($fmt,$ts):$date; }
+function format_date(?string $date, string $fmt='M d, Y'): string { if(!$date) return '-'; $ts=strtotime($date); if(!$ts) return $date; $out=date($fmt,$ts); $months=function_exists('locale_month_names')?locale_month_names():[]; return $months?strtr($out,$months):$out; }
 function money_color(string $entryType): string { return $entryType==='credit'?'text-success':'text-danger'; }
 function safe_count(mixed $v): int { return is_countable($v) ? count($v) : 0; }

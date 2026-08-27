@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-final class DemoFundingService
+final class FundingService
 {
     public function __construct(private PDO $db) {}
 
-    public function fund(int $accountId,string $amount,string $description='Demo funding',?int $actorUserId=null,?string $idempotencyKey=null):string
+    public function fund(int $accountId,string $amount,string $description='Account funding',?int $actorUserId=null,?string $idempotencyKey=null):string
     {
         if(!preg_match('/^\d+(\.\d{1,4})?$/',$amount) || (float)$amount<=0) throw new InvalidArgumentException('Funding amount must be greater than zero.');
         $this->db->beginTransaction();
@@ -33,7 +33,7 @@ final class DemoFundingService
     public function openingBalance(int $accountId,string $amount,?int $actorUserId=null):string
     {
         $stmt=$this->db->prepare('SELECT COUNT(*) FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? AND t.type="opening_balance"');$stmt->execute([$accountId]);
-        if((int)$stmt->fetchColumn()>0) throw new RuntimeException('An opening balance already exists for this account. Use demo funding for additional funds.');
+        if((int)$stmt->fetchColumn()>0) throw new RuntimeException('An opening balance already exists for this account. Use account funding for additional funds.');
         return $this->createMovement($accountId,$amount,'opening_balance','Opening balance', $actorUserId);
     }
 

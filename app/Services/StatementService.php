@@ -64,7 +64,7 @@ final class StatementService
     {
         $fh = fopen('php://temp', 'r+');
         // Header
-        fputcsv($fh, ['CommServe Demo Bank - Account Statement']);
+        fputcsv($fh, [APP_NAME . ' - Account Statement']);
         fputcsv($fh, ['Account Number', $account['account_number']]);
         fputcsv($fh, ['Account Type', $account['type_name']]);
         fputcsv($fh, ['Currency', $account['currency']]);
@@ -93,7 +93,7 @@ final class StatementService
         fputcsv($fh, []);
         fputcsv($fh, ['Opening Balance', number_format($opening, 2)]);
         fputcsv($fh, ['Closing Balance', number_format($running, 2)]);
-        fputcsv($fh, ['Note', 'SIMULATION ONLY - No real funds']);
+        
         rewind($fh);
         $csv = stream_get_contents($fh);
         fclose($fh);
@@ -107,10 +107,9 @@ final class StatementService
 
         // Header
         $pdf->setFont('Helvetica', 'B', 18);
-        $pdf->text(40, 800, 'CommServe Demo Bank');
+        $pdf->text(40, 800, APP_NAME);
         $pdf->setFont('Helvetica', '', 9);
-        $pdf->text(40, 788, 'DEMO - Simulated Banking - No Real Funds Processed');
-        $pdf->line(40, 782, 555, 782, 0.8);
+                $pdf->line(40, 782, 555, 782, 0.8);
 
         $pdf->setFont('Helvetica', 'B', 14);
         $pdf->text(40, 765, 'Account Statement');
@@ -178,8 +177,8 @@ final class StatementService
         $pdf->setFont('Helvetica', 'B', 10);
         $pdf->writeLine('Summary: ' . count($transactions) . ' transaction(s) | Opening: ' . number_format($opening, 2) . ' | Closing: ' . number_format($closing, 2), 40, 10, 'B', 14);
         $pdf->setFont('Helvetica', '', 8);
-        $pdf->writeLine('This statement is computer generated and valid without signature. SIMULATION ONLY.', 40, 8, '', 12);
-        $pdf->writeLine('CommServe Demo Bank | commserve.test | No real banking rails used.', 40, 8, '', 12);
+        $pdf->writeLine('This statement is computer generated and valid without signature.', 40, 8, '', 12);
+        $pdf->writeLine(APP_NAME, 40, 8, '', 12);
 
         return $pdf->output();
     }

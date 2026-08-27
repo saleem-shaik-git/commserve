@@ -6,12 +6,12 @@ final class BeneficiaryService
 {
     public function __construct(private PDO $db) {}
 
-    public function create(int $userId, string $name, string $accountNumber, string $bankName='CommServe Demo Bank', ?string $nickname=null): int
+    public function create(int $userId, string $name, string $accountNumber, string $bankName='CommServe Bank', ?string $nickname=null): int
     {
         $accountNumber=trim($accountNumber);$requestedName=trim($name);$bankName=trim($bankName);$nickname=$nickname!==null?trim($nickname):null;
         if(!preg_match('/^\d{10}$/',$accountNumber))throw new InvalidArgumentException('Account number must contain 10 digits.');
         if($requestedName===''||mb_strlen($requestedName)>160)throw new InvalidArgumentException('Beneficiary name is required.');
-        if($bankName==='')$bankName='CommServe Demo Bank';
+        if($bankName==='')$bankName='CommServe Bank';
         $stmt=$this->db->prepare('SELECT a.id,a.user_id,a.account_number,a.status,u.first_name,u.last_name FROM accounts a JOIN users u ON u.id=a.user_id WHERE a.account_number=? AND a.status="active" LIMIT 1');$stmt->execute([$accountNumber]);$account=$stmt->fetch();
         if(!$account)throw new RuntimeException('Destination account does not exist or is not active.');
         if((int)$account['user_id']===$userId)throw new RuntimeException('You cannot add your own account as a beneficiary.');

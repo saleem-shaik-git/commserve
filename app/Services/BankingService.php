@@ -16,10 +16,10 @@ final class BankingService
         $this->compliance = new ComplianceRiskService($db);
     }
 
-    public function deposit(int $accountId,string $amount,string $description='Simulated deposit',?int $actorUserId=null,?string $idempotencyKey=null):string
+    public function deposit(int $accountId,string $amount,string $description='Deposit',?int $actorUserId=null,?string $idempotencyKey=null):string
     { return $this->singleAccountMovement($accountId,$amount,'deposit','credit',$description,$actorUserId,$idempotencyKey); }
 
-    public function withdraw(int $accountId,string $amount,string $description='Simulated withdrawal',?int $actorUserId=null,?string $idempotencyKey=null):string
+    public function withdraw(int $accountId,string $amount,string $description='Withdrawal',?int $actorUserId=null,?string $idempotencyKey=null):string
     {
         $this->assertPositiveAmount($amount);$this->db->beginTransaction();
         try {
