@@ -694,6 +694,14 @@ function translations(): array
         'The one-time password to confirm this payment has been sent to your email.' => 'The one-time password to confirm this payment has been sent to your email.',
         'Your CommServe Bank OTP — Bill payment' => 'Your CommServe Bank OTP — Bill payment',
         'sent to your email' => 'sent to your email',
+        // --- Beneficiary routing + typed destination ---
+        'Destination account not found or inactive.' => 'Destination account not found or inactive.',
+        'Destination account number' => 'Destination account number',
+        'Enter a valid 10-digit CommServe account number.' => 'Enter a valid 10-digit CommServe account number.',
+        'Enter the recipient\'s 10-digit CommServe account number.' => 'Enter the recipient\'s 10-digit CommServe account number.',
+        'Routing' => 'Routing',
+        'Routing Number' => 'Routing Number',
+        'Routing number must be 4-20 letters/digits.' => 'Routing number must be 4-20 letters/digits.',
     ];
 
     $es = [
@@ -1352,6 +1360,14 @@ function translations(): array
         'The one-time password to confirm this payment has been sent to your email.' => 'La contraseña de un solo uso para confirmar este pago se envió a su correo.',
         'Your CommServe Bank OTP — Bill payment' => 'Su OTP de CommServe Bank — Pago de servicio',
         'sent to your email' => 'enviado a su correo',
+        // --- Beneficiary routing + typed destination ---
+        'Destination account not found or inactive.' => 'La cuenta destino no existe o está inactiva.',
+        'Destination account number' => 'Número de cuenta destino',
+        'Enter a valid 10-digit CommServe account number.' => 'Ingrese un número de cuenta CommServe válido de 10 dígitos.',
+        'Enter the recipient\'s 10-digit CommServe account number.' => 'Ingrese el número de cuenta CommServe de 10 dígitos del destinatario.',
+        'Routing' => 'Ruta',
+        'Routing Number' => 'Número de ruta',
+        'Routing number must be 4-20 letters/digits.' => 'El número de ruta debe tener 4-20 letras/dígitos.',
     ];
 
     $fr = [
@@ -2016,6 +2032,14 @@ function translations(): array
         'The one-time password to confirm this payment has been sent to your email.' => 'Le mot de passe à usage unique pour confirmer ce paiement a été envoyé à votre e-mail.',
         'Your CommServe Bank OTP — Bill payment' => 'Votre OTP CommServe Bank — Paiement de facture',
         'sent to your email' => 'envoyé à votre e-mail',
+        // --- Beneficiary routing + typed destination ---
+        'Destination account not found or inactive.' => 'Le compte destinataire est introuvable ou inactif.',
+        'Destination account number' => 'Numéro de compte destinataire',
+        'Enter a valid 10-digit CommServe account number.' => 'Saisissez un numéro de compte CommServe valide à 10 chiffres.',
+        'Enter the recipient\'s 10-digit CommServe account number.' => 'Saisissez le numéro de compte CommServe à 10 chiffres du destinataire.',
+        'Routing' => 'Routage',
+        'Routing Number' => 'Numéro de routage',
+        'Routing number must be 4-20 letters/digits.' => 'Le numéro de routage doit contenir 4-20 lettres/chiffres.',
     ];
 
     $d = [

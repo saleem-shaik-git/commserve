@@ -15,11 +15,6 @@ $accounts = $accountService->getAccounts((int)$user['id']);
 $beneficiaries = $beneficiaryService->list((int)$user['id']);
 $totalBalance = $accountService->getTotalBalance((int)$user['id']);
 
-// Other CommServe accounts (excluding own)
-$stmt = $db->prepare('SELECT a.id, a.account_number, at.name AS type_name, u.first_name, u.last_name FROM accounts a JOIN users u ON u.id=a.user_id JOIN account_types at ON at.id=a.account_type_id WHERE a.user_id<>? AND a.status="active" ORDER BY u.first_name LIMIT 100');
-$stmt->execute([(int)$user['id']]);
-$otherAccounts = $stmt->fetchAll();
-
 $type = $_GET['type'] ?? 'own'; // own, beneficiary, other
 $fromPreselect = (int)($_GET['from'] ?? 0);
 $error = null;
@@ -37,8 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pin = trim((string)($_POST['transaction_pin'] ?? ''));
         $idempotencyKey = trim((string)($_POST['idempotency_key'] ?? ''));
 
-        if ($transferType === 'own' || $transferType === 'other') {
+        if ($transferType === 'own') {
             $to = (int)($_POST['to_account'] ?? 0);
+        } elseif ($transferType === 'other') {
+            // Destination is typed as a 10-digit CommServe account number.
+            $toAccountNumber = preg_replace('/\D/', '', (string)($_POST['to_account_number'] ?? ''));
+            if (strlen($toAccountNumber) !== 10) throw new RuntimeException('Enter a valid 10-digit CommServe account number.');
+            $stmt = $db->prepare('SELECT id FROM accounts WHERE account_number=? AND status="active" LIMIT 1');
+            $stmt->execute([$toAccountNumber]);
+            $to = (int)$stmt->fetchColumn();
+            if (!$to) throw new RuntimeException('Destination account not found or inactive.');
         } elseif ($transferType === 'beneficiary') {
             $beneficiaryId = (int)($_POST['beneficiary_id'] ?? 0);
             $b = $beneficiaryService->activeOwned((int)$user['id'], $beneficiaryId);
@@ -117,7 +120,7 @@ require __DIR__ . '/partials/sidebar.php';
               <input type="hidden" name="transfer_type" value="beneficiary">
               <div class="row g-3">
                 <div class="col-md-6"><label class="form-label"><?=e(t('From Account'))?></label><select name="from_account" class="form-select" required><option value=""><?=e(t('Select'))?></option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>" <?= $fromPreselect===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · $<?= number_format((float)$a['available_balance'],2) ?></option><?php endforeach; ?></select></div>
-                <div class="col-md-6"><label class="form-label"><?=e(t('Beneficiary'))?></label><select name="beneficiary_id" class="form-select" required><option value=""><?=e(t('Select beneficiary'))?></option><?php foreach ($beneficiaries as $b): if($b['status']!=='active') continue; ?><option value="<?= $b['id'] ?>"><?= e($b['name']) ?> · <?= e($b['account_number']) ?> · <?= e($b['bank_name']) ?></option><?php endforeach; ?></select></div>
+                <div class="col-md-6"><label class="form-label"><?=e(t('Beneficiary'))?></label><select name="beneficiary_id" class="form-select" required><option value=""><?=e(t('Select beneficiary'))?></option><?php foreach ($beneficiaries as $b): if($b['status']!=='active') continue; ?><option value="<?= $b['id'] ?>"><?= e($b['name']) ?> · <?= e($b['account_number']) ?><?= !empty($b['routing_number']) ? ' · '.e(t('Routing')).' '.e($b['routing_number']) : '' ?> · <?= e($b['bank_name']) ?></option><?php endforeach; ?></select></div>
                 <div class="col-md-6"><label class="form-label"><?=e(t('Amount'))?></label><div class="input-group"><span class="input-group-text">$</span><input name="amount" class="form-control" required></div></div>
                 <div class="col-md-6"><label class="form-label"><?=e(t('Transaction PIN'))?></label><input name="transaction_pin" type="password" class="form-control" pattern="\d{4,6}" maxlength="6" required></div>
                 <div class="col-12"><label class="form-label"><?=e(t('Description'))?></label><input name="description" class="form-control" placeholder="<?=e(t('e.g. Family support'))?>"></div>
@@ -135,7 +138,7 @@ require __DIR__ . '/partials/sidebar.php';
               <input type="hidden" name="transfer_type" value="other">
               <div class="row g-3">
                 <div class="col-md-6"><label class="form-label"><?=e(t('From Account'))?></label><select name="from_account" class="form-select" required><option value=""><?=e(t('Select'))?></option><?php foreach ($accounts as $a): ?><option value="<?= $a['id'] ?>" <?= $fromPreselect===$a['id']?'selected':'' ?>><?= e($a['type_name']) ?> · <?= e($a['account_number']) ?> · $<?= number_format((float)$a['available_balance'],2) ?></option><?php endforeach; ?></select></div>
-                <div class="col-md-6"><label class="form-label"><?=e(t('Destination Account'))?></label><select name="to_account" class="form-select" required><option value=""><?=e(t('Select'))?></option><?php foreach ($otherAccounts as $oa): ?><option value="<?= $oa['id'] ?>"><?= e($oa['first_name'].' '.$oa['last_name']) ?> · <?= e($oa['account_number']) ?> · <?= e($oa['type_name']) ?></option><?php endforeach; ?></select></div>
+                <div class="col-md-6"><label class="form-label"><?=e(t('Destination account number'))?></label><input name="to_account_number" class="form-control font-monospace" inputmode="numeric" pattern="\d{10}" maxlength="10" placeholder="0100000001" required><div class="form-text"><?=e(t('Enter the recipient\'s 10-digit CommServe account number.'))?></div></div>
                 <div class="col-md-6"><label class="form-label"><?=e(t('Amount'))?></label><div class="input-group"><span class="input-group-text">$</span><input name="amount" class="form-control" required></div></div>
                 <div class="col-md-6"><label class="form-label"><?=e(t('Transaction PIN'))?></label><input name="transaction_pin" type="password" class="form-control" pattern="\d{4,6}" maxlength="6" required></div>
                 <div class="col-12"><label class="form-label"><?=e(t('Description'))?></label><input name="description" class="form-control" placeholder="<?=e(t('e.g. Payment'))?>"></div>

@@ -6,9 +6,11 @@ final class BeneficiaryService
 {
     public function __construct(private PDO $db) {}
 
-    public function create(int $userId, string $name, string $accountNumber, string $bankName='CommServe Bank', ?string $nickname=null): int
+    public function create(int $userId, string $name, string $accountNumber, string $bankName='CommServe Bank', ?string $nickname=null, ?string $routingNumber=null): int
     {
         $accountNumber=trim($accountNumber);$requestedName=trim($name);$bankName=trim($bankName);$nickname=$nickname!==null?trim($nickname):null;
+        $routingNumber=$routingNumber!==null?preg_replace('/[^A-Za-z0-9-]/','',trim($routingNumber)):'';
+        if($routingNumber!==''&&!preg_match('/^[A-Za-z0-9-]{4,20}$/',$routingNumber))throw new InvalidArgumentException('Routing number must be 4-20 letters/digits.');
         if(!preg_match('/^\d{10}$/',$accountNumber))throw new InvalidArgumentException('Account number must contain 10 digits.');
         if($requestedName===''||mb_strlen($requestedName)>160)throw new InvalidArgumentException('Beneficiary name is required.');
         if($bankName==='')$bankName='CommServe Bank';
@@ -16,10 +18,10 @@ final class BeneficiaryService
         if(!$account)throw new RuntimeException('Destination account does not exist or is not active.');
         if((int)$account['user_id']===$userId)throw new RuntimeException('You cannot add your own account as a beneficiary.');
         $stmt=$this->db->prepare('SELECT id,status FROM beneficiaries WHERE user_id=? AND account_number=? LIMIT 1');$stmt->execute([$userId,$accountNumber]);$existing=$stmt->fetch();
-        if($existing){if($existing['status']==='disabled'){ $stmt=$this->db->prepare('UPDATE beneficiaries SET status="active",name=?,bank_name=?,nickname=? WHERE id=? AND user_id=?');$stmt->execute([$account['first_name'].' '.$account['last_name'],$bankName,$nickname?:$requestedName,$existing['id'],$userId]);$this->audit($userId,'beneficiary_reactivated','beneficiary',(int)$existing['id'],['account_number'=>$accountNumber]);return (int)$existing['id'];}throw new RuntimeException('This beneficiary already exists.');}
+        if($existing){if($existing['status']==='disabled'){ $stmt=$this->db->prepare('UPDATE beneficiaries SET status="active",name=?,bank_name=?,nickname=?,routing_number=? WHERE id=? AND user_id=?');$stmt->execute([$account['first_name'].' '.$account['last_name'],$bankName,$nickname?:$requestedName,$routingNumber!==''?$routingNumber:null,$existing['id'],$userId]);$this->audit($userId,'beneficiary_reactivated','beneficiary',(int)$existing['id'],['account_number'=>$accountNumber]);return (int)$existing['id'];}throw new RuntimeException('This beneficiary already exists.');}
         $verifiedName=trim($account['first_name'].' '.$account['last_name']);
         $displayNickname=$nickname!==null&&$nickname!==''?$nickname:$requestedName;
-        $stmt=$this->db->prepare('INSERT INTO beneficiaries(user_id,name,account_number,bank_name,nickname,status) VALUES(?,?,?,?,?,"active")');$stmt->execute([$userId,$verifiedName,$accountNumber,$bankName,$displayNickname]);$id=(int)$this->db->lastInsertId();
+        $stmt=$this->db->prepare('INSERT INTO beneficiaries(user_id,name,account_number,routing_number,bank_name,nickname,status) VALUES(?,?,?,?,?,?,"active")');$stmt->execute([$userId,$verifiedName,$accountNumber,$routingNumber!==''?$routingNumber:null,$bankName,$displayNickname]);$id=(int)$this->db->lastInsertId();
         $this->audit($userId,'beneficiary_created','beneficiary',$id,['account_number'=>$accountNumber,'verified_name'=>$verifiedName]);return $id;
     }
 
