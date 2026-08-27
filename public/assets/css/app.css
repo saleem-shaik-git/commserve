@@ -2,9 +2,29 @@ body{background:#f5f7fb;color:#1f2937;font-family:Inter,system-ui,-apple-system,
 .auth-bg{background:linear-gradient(135deg,#0f172a,#1d4ed8);min-height:100vh}
 .brand-mark{width:52px;height:52px;border-radius:14px;background:#0d6efd;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:700}
 .brand-mark-sm{width:32px;height:32px;border-radius:8px;background:#0d6efd;color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px}
-.sidebar{min-height:calc(100vh - 56px);background:#fff;border-right:1px solid #e9ecef}
+.sidebar{background:#fff;border-right:1px solid #e9ecef}
+@media (min-width:992px){.sidebar{min-height:calc(100vh - 56px)}}
 .sidebar .nav-link{color:#59636e;border-radius:10px;margin-bottom:4px;padding:10px 12px;font-size:.92rem;display:flex;align-items:center}
 .sidebar .nav-link:hover,.sidebar .nav-link.active{background:#eaf2ff;color:#0d6efd;font-weight:600}
+
+/* ===== Mobile breadcrumb navigation ===== */
+/* Customer sidebar: vertical on desktop, breadcrumb-style chips on mobile */
+@media (max-width:991.98px){
+  .sidebar{border-right:0;border-bottom:1px solid #e9ecef}
+  .sidebar .crumb-nav .nav-link{margin-bottom:0;padding:6px 12px;font-size:.85rem;border:1px solid #e9ecef;border-radius:999px;white-space:nowrap;color:#495057}
+  .sidebar .crumb-nav .nav-link i{margin-right:4px;font-size:.85rem}
+  .sidebar .crumb-nav .nav-link.active{border-color:#0d6efd;background:#eaf2ff;color:#0d6efd}
+  .sidebar .crumb-nav .nav-link+.nav-link{position:relative}
+}
+/* Admin breadcrumb bar: wraps on desktop, single swipeable line on mobile */
+.admin-breadcrumb .breadcrumb{--bs-breadcrumb-divider:'\203A';margin-bottom:0}
+.admin-breadcrumb .breadcrumb-item a{color:#495057}
+.admin-breadcrumb .breadcrumb-item a:hover{color:#0d6efd}
+.admin-breadcrumb .breadcrumb-item.active{color:#0d6efd}
+@media (max-width:991.98px){
+  .admin-breadcrumb .breadcrumb{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;gap:2px}
+  .admin-breadcrumb .breadcrumb-item{white-space:nowrap}
+}
 .hero-card{background:linear-gradient(135deg,#0d6efd,#4f46e5);border-radius:16px}
 .hero-card-dark{background:linear-gradient(135deg,#0f172a,#1e3a8a);border-radius:16px}
 .stat-card{background:#fff;border:1px solid #edf0f5;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(15,23,42,.05)}

@@ -4,7 +4,8 @@ function nav_active(string $key, string $current): string { return $current === 
 ?>
 <aside class="col-lg-2 sidebar p-3 bg-white border-end">
   <div class="d-lg-none mb-3"><div class="card hero-card border-0"><div class="card-body p-3 text-white"><div class="small text-white-50"><?=e(t('Total Balance'))?></div><div class="fw-bold fs-5">$<?= number_format($totalBalance ?? 0, 2) ?></div></div></div></div>
-  <nav class="nav flex-column gap-1">
+  <!-- Desktop: vertical sidebar · Mobile: breadcrumb-style chips -->
+  <nav class="nav crumb-nav gap-1 flex-row flex-wrap align-items-center flex-lg-column align-items-lg-stretch" aria-label="<?=e(t('Menu'))?>">
     <a class="nav-link <?= nav_active('dashboard', $current) ?>" href="<?=url('dashboard.php')?>"><i class="bi bi-grid me-2"></i><?=e(t('Dashboard'))?></a>
     <a class="nav-link <?= nav_active('accounts', $current) ?>" href="<?=url('accounts.php')?>"><i class="bi bi-wallet2 me-2"></i><?=e(t('Accounts'))?></a>
     <a class="nav-link <?= nav_active('crypto', $current) ?>" href="<?=url('crypto.php')?>"><i class="bi bi-currency-bitcoin me-2"></i><?=e(t('Crypto'))?></a>
@@ -16,11 +17,11 @@ function nav_active(string $key, string $current): string { return $current === 
     <a class="nav-link <?= nav_active('scheduled', $current) ?>" href="<?=url('scheduled-payments.php')?>"><i class="bi bi-calendar-check me-2"></i><?=e(t('Scheduled Payments'))?></a>
     <a class="nav-link <?= nav_active('cards', $current) ?>" href="<?=url('cards.php')?>"><i class="bi bi-credit-card me-2"></i><?=e(t('Cards & ATM'))?></a>
     <a class="nav-link <?= nav_active('pin', $current) ?>" href="<?=url('transaction-pin.php')?>"><i class="bi bi-shield-lock me-2"></i><?=e(t('Transaction PIN'))?></a>
-    <div class="mt-3 small text-muted text-uppercase fw-semibold"><?=e(t('Support'))?></div>
+    <span class="crumb-divider mt-3 small text-muted text-uppercase fw-semibold d-none d-lg-block"><?=e(t('Support'))?></span>
     <a class="nav-link <?= nav_active('notifications', $current) ?>" href="<?=url('notifications.php')?>"><i class="bi bi-bell me-2"></i><?=e(t('Notifications'))?></a>
     <a class="nav-link <?= nav_active('security', $current) ?>" href="<?=url('security-activity.php')?>"><i class="bi bi-shield-check me-2"></i><?=e(t('Security'))?></a>
   </nav>
-  <div class="card border-0 bg-light mt-4"><div class="card-body p-3"><div class="small fw-semibold"><i class="bi bi-shield-check me-1"></i> <?=e(t('Security'))?></div><div class="small text-muted mt-1"><?=e(t('Every transfer OTP stage is verified by you and approved by an administrator.'))?></div><a href="<?=url('statements.php')?>" class="btn btn-sm btn-outline-primary mt-2 w-100"><?=e(t('Get Statement'))?></a></div></div>
+  <div class="card border-0 bg-light mt-4 d-none d-lg-block"><div class="card-body p-3"><div class="small fw-semibold"><i class="bi bi-info-circle me-1"></i> <?=e(t('Security'))?></div><div class="small text-muted mt-1"><?=e(t('Every transfer OTP stage is verified by you and approved by an administrator.'))?></div><a href="<?=url('statements.php')?>" class="btn btn-sm btn-outline-primary mt-2 w-100"><?=e(t('Get Statement'))?></a></div></div>
 </aside>
 <main class="col-lg-10 p-3 p-lg-4">
 <?php if (!empty($flash_success)): ?><div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i><?= e($flash_success) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>

@@ -448,6 +448,7 @@ function translations(): array
         'Card number' => 'Card number', 'Expiry' => 'Expiry', 'CVV' => 'CVV', 'Account ID' => 'Account ID',
         'Operational Performance' => 'Operational Performance', 'Transaction Channels / Types' => 'Transaction Channels / Types', 'Success rate' => 'Success rate', 'Top Customers' => 'Top Customers', 'Transaction Volume' => 'Transaction Volume',
         'Bill payment' => 'Bill payment', 'Card payment' => 'Card payment', 'Atm withdrawal' => 'Atm withdrawal', 'Crypto receive' => 'Crypto receive', 'Crypto send' => 'Crypto send', 'Crypto convert' => 'Crypto convert', 'Opening balance' => 'Opening balance', 'Reversal' => 'Reversal', 'Refund' => 'Refund', 'Info' => 'Info', 'Warning' => 'Warning', 'Error' => 'Error', 'Critical' => 'Critical', 'High' => 'High', 'Medium' => 'Medium', 'Low' => 'Low', 'Electricity' => 'Electricity', 'Internet' => 'Internet', 'Cable' => 'Cable', 'Airtime' => 'Airtime', 'Data' => 'Data', 'Water' => 'Water', 'Requires review' => 'Requires review',
+        'Menu' => 'Menu', 'Not run' => 'Not run', 'Passed' => 'Passed', 'Review now' => 'Review now', 'pending approvals — transfer OTP stages and adjustments.' => 'pending approvals — transfer OTP stages and adjustments.',
     ];
 
     $es = [
@@ -859,6 +860,7 @@ function translations(): array
         'Card number' => 'Número de tarjeta', 'Expiry' => 'Vencimiento', 'CVV' => 'CVV', 'Account ID' => 'ID de cuenta',
         'Operational Performance' => 'Desempeño operativo', 'Transaction Channels / Types' => 'Canales / Tipos de transacción', 'Success rate' => 'Tasa de éxito', 'Top Customers' => 'Principales clientes', 'Transaction Volume' => 'Volumen de transacciones',
         'Bill payment' => 'Pago de servicio', 'Card payment' => 'Pago con tarjeta', 'Atm withdrawal' => 'Retiro en cajero', 'Crypto receive' => 'Recepción de cripto', 'Crypto send' => 'Envío de cripto', 'Crypto convert' => 'Conversión de cripto', 'Opening balance' => 'Saldo inicial', 'Reversal' => 'Reversión', 'Refund' => 'Reembolso', 'Info' => 'Información', 'Warning' => 'Advertencia', 'Error' => 'Error', 'Critical' => 'Crítico', 'High' => 'Alto', 'Medium' => 'Medio', 'Low' => 'Bajo', 'Electricity' => 'Electricidad', 'Internet' => 'Internet', 'Cable' => 'Cable', 'Airtime' => 'Tiempo aire', 'Data' => 'Datos', 'Water' => 'Agua', 'Requires review' => 'Requiere revisión',
+        'Menu' => 'Menú', 'Not run' => 'Sin ejecutar', 'Passed' => 'Aprobada', 'Review now' => 'Revisar ahora', 'pending approvals — transfer OTP stages and adjustments.' => 'aprobaciones pendientes: etapas de OTP de transferencias y ajustes.',
     ];
 
     $fr = [
@@ -1277,6 +1279,7 @@ function translations(): array
         'Card number' => 'Numéro de carte', 'Expiry' => 'Expiration', 'CVV' => 'CVV', 'Account ID' => 'ID du compte',
         'Operational Performance' => 'Performance opérationnelle', 'Transaction Channels / Types' => 'Canaux / Types de transactions', 'Success rate' => 'Taux de réussite', 'Top Customers' => 'Principaux clients', 'Transaction Volume' => 'Volume de transactions',
         'Bill payment' => 'Paiement de facture', 'Card payment' => 'Paiement par carte', 'Atm withdrawal' => 'Retrait au distributeur', 'Crypto receive' => 'Réception crypto', 'Crypto send' => 'Envoi crypto', 'Crypto convert' => 'Conversion crypto', 'Opening balance' => 'Solde d\'ouverture', 'Reversal' => 'Inversion', 'Refund' => 'Remboursement', 'Info' => 'Info', 'Warning' => 'Avertissement', 'Error' => 'Erreur', 'Critical' => 'Critique', 'High' => 'Élevé', 'Medium' => 'Moyen', 'Low' => 'Faible', 'Electricity' => 'Électricité', 'Internet' => 'Internet', 'Cable' => 'Câble', 'Airtime' => 'Crédit mobile', 'Data' => 'Données', 'Water' => 'Eau', 'Requires review' => 'Nécessite une révision',
+        'Menu' => 'Menu', 'Not run' => 'Non exécutée', 'Passed' => 'Réussie', 'Review now' => 'Examiner maintenant', 'pending approvals — transfer OTP stages and adjustments.' => 'approbations en attente — étapes OTP de virements et ajustements.',
     ];
 
     $d = [
