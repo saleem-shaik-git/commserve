@@ -159,7 +159,6 @@ function translations(): array
         // Bill payments / scheduled
         'Pay electricity, internet, cable, airtime, data and water bills.' => 'Pay electricity, internet, cable, airtime, data and water bills.',
         'Biller' => 'Biller', 'Customer reference' => 'Customer reference', 'Pay Bill' => 'Pay Bill',
-        'Payment initiated. The OTP is displayed below.' => 'Payment initiated. The OTP is displayed below.',
         'Existing payment request found.' => 'Existing payment request found.', 'Payment cancelled.' => 'Payment cancelled.',
         'Bill payment completed successfully.' => 'Bill payment completed successfully.',
         'Scheduled & Recurring Payments' => 'Scheduled & Recurring Payments',
@@ -196,7 +195,6 @@ function translations(): array
 
         // --- Extended dictionary (phase 13) ---
         '30-Day Summary' => '30-Day Summary',
-        'A new one-time password has been generated for the current stage.' => 'A new one-time password has been generated for the current stage.',
         'A second administrator must approve the action before any ledger movement occurs.' => 'A second administrator must approve the action before any ledger movement occurs.',
         'Account Details' => 'Account Details',
         'Account Funding' => 'Account Funding',
@@ -268,7 +266,6 @@ function translations(): array
         'Driver Licence' => 'Driver Licence',
         'Enable' => 'Enable',
         'Enabled' => 'Enabled',
-        'Enter the 6-digit OTP to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.' => 'Enter the 6-digit OTP to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.',
         'Enter the account holder name' => 'Enter the account holder name',
         'Entry' => 'Entry',
         'Event Timeline' => 'Event Timeline',
@@ -688,6 +685,15 @@ function translations(): array
         '%s message(s) removed.' => '%s message(s) removed.',
         'Clear' => 'Clear',
         'Remove all logged messages?' => 'Remove all logged messages?',
+        // --- Email-only OTP delivery ---
+        'A new one-time password has been sent to your email.' => 'A new one-time password has been sent to your email.',
+        'Check your email for the 6-digit code.' => 'Check your email for the 6-digit code.',
+        'Enter the 6-digit OTP sent to your email to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.' => 'Enter the 6-digit OTP sent to your email to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.',
+        'Payment initiated. The OTP has been sent to your email.' => 'Payment initiated. The OTP has been sent to your email.',
+        'The one-time password for this stage has been sent to your email.' => 'The one-time password for this stage has been sent to your email.',
+        'The one-time password to confirm this payment has been sent to your email.' => 'The one-time password to confirm this payment has been sent to your email.',
+        'Your CommServe Bank OTP — Bill payment' => 'Your CommServe Bank OTP — Bill payment',
+        'sent to your email' => 'sent to your email',
     ];
 
     $es = [
@@ -814,7 +820,6 @@ function translations(): array
         'From asset' => 'Activo de origen', 'To asset' => 'Activo de destino',
         'Pay electricity, internet, cable, airtime, data and water bills.' => 'Pague servicios de electricidad, internet, cable, tiempo aire, datos y agua.',
         'Biller' => 'Prestador', 'Customer reference' => 'Referencia de cliente', 'Pay Bill' => 'Pagar servicio',
-        'Payment initiated. The OTP is displayed below.' => 'Pago iniciado. El OTP se muestra abajo.',
         'Existing payment request found.' => 'Se encontró una solicitud de pago existente.', 'Payment cancelled.' => 'Pago cancelado.',
         'Bill payment completed successfully.' => 'Pago de servicio completado con éxito.',
         'Scheduled & Recurring Payments' => 'Pagos programados y recurrentes',
@@ -848,7 +853,6 @@ function translations(): array
 
         // --- Extended dictionary (phase 13) ---
         '30-Day Summary' => 'Resumen de 30 días',
-        'A new one-time password has been generated for the current stage.' => 'Se generó una nueva contraseña de un solo uso para la etapa actual.',
         'A second administrator must approve the action before any ledger movement occurs.' => 'Un segundo administrador debe aprobar la acción antes de cualquier movimiento en el libro mayor.',
         'Account Details' => 'Detalles de la cuenta',
         'Account Funding' => 'Financiación de cuentas',
@@ -920,7 +924,6 @@ function translations(): array
         'Driver Licence' => 'Licencia de conducir',
         'Enable' => 'Habilitar',
         'Enabled' => 'Habilitado',
-        'Enter the 6-digit OTP to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.' => 'Ingrese el OTP de 6 dígitos para pasar esta etapa. Cada etapa la verifica usted y luego la aprueba un administrador antes de desbloquear la siguiente.',
         'Enter the account holder name' => 'Ingrese el nombre del titular',
         'Entry' => 'Asiento',
         'Event Timeline' => 'Cronología de eventos',
@@ -1340,6 +1343,15 @@ function translations(): array
         '%s message(s) removed.' => '%s mensaje(s) eliminados.',
         'Clear' => 'Limpiar',
         'Remove all logged messages?' => '¿Eliminar todos los mensajes registrados?',
+        // --- Email-only OTP delivery ---
+        'A new one-time password has been sent to your email.' => 'Se envió una nueva contraseña de un solo uso a su correo.',
+        'Check your email for the 6-digit code.' => 'Revise su correo para obtener el código de 6 dígitos.',
+        'Enter the 6-digit OTP sent to your email to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.' => 'Ingrese el OTP de 6 dígitos enviado a su correo para pasar esta etapa. Cada etapa la verifica usted y luego la aprueba un administrador antes de desbloquear la siguiente.',
+        'Payment initiated. The OTP has been sent to your email.' => 'Pago iniciado. El OTP se envió a su correo.',
+        'The one-time password for this stage has been sent to your email.' => 'La contraseña de un solo uso de esta etapa se envió a su correo.',
+        'The one-time password to confirm this payment has been sent to your email.' => 'La contraseña de un solo uso para confirmar este pago se envió a su correo.',
+        'Your CommServe Bank OTP — Bill payment' => 'Su OTP de CommServe Bank — Pago de servicio',
+        'sent to your email' => 'enviado a su correo',
     ];
 
     $fr = [
@@ -1471,7 +1483,6 @@ function translations(): array
         'From asset' => 'Actif source', 'To asset' => 'Actif cible',
         'Pay electricity, internet, cable, airtime, data and water bills.' => 'Payez vos factures d\'électricité, d\'internet, de câble, de crédit mobile, de données et d\'eau.',
         'Biller' => 'Facturier', 'Customer reference' => 'Référence client', 'Pay Bill' => 'Payer la facture',
-        'Payment initiated. The OTP is displayed below.' => 'Paiement initié. L\'OTP s\'affiche ci-dessous.',
         'Existing payment request found.' => 'Demande de paiement existante trouvée.', 'Payment cancelled.' => 'Paiement annulé.',
         'Bill payment completed successfully.' => 'Facture payée avec succès.',
         'Scheduled & Recurring Payments' => 'Paiements programmés et récurrents',
@@ -1506,7 +1517,6 @@ function translations(): array
 
         // --- Extended dictionary (phase 13) ---
         '30-Day Summary' => 'Résumé sur 30 jours',
-        'A new one-time password has been generated for the current stage.' => 'Un nouveau mot de passe à usage unique a été généré pour l\'étape actuelle.',
         'A second administrator must approve the action before any ledger movement occurs.' => 'Un second administrateur doit approuver l\'action avant tout mouvement au grand livre.',
         'Account Details' => 'Détails du compte',
         'Account Funding' => 'Financement des comptes',
@@ -1578,7 +1588,6 @@ function translations(): array
         'Driver Licence' => 'Permis de conduire',
         'Enable' => 'Activer',
         'Enabled' => 'Activé',
-        'Enter the 6-digit OTP to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.' => 'Saisissez l\'OTP à 6 chiffres pour passer cette étape. Chaque étape est vérifiée par vous, puis approuvée par un administrateur avant de déverrouiller la suivante.',
         'Enter the account holder name' => 'Saisir le nom du titulaire',
         'Entry' => 'Écriture',
         'Event Timeline' => 'Chronologie des événements',
@@ -1998,6 +2007,15 @@ function translations(): array
         '%s message(s) removed.' => '%s message(s) supprimé(s).',
         'Clear' => 'Vider',
         'Remove all logged messages?' => 'Supprimer tous les messages enregistrés ?',
+        // --- Email-only OTP delivery ---
+        'A new one-time password has been sent to your email.' => 'Un nouveau mot de passe à usage unique a été envoyé à votre e-mail.',
+        'Check your email for the 6-digit code.' => 'Consultez votre e-mail pour le code à 6 chiffres.',
+        'Enter the 6-digit OTP sent to your email to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.' => 'Saisissez l’OTP à 6 chiffres envoyé à votre e-mail pour passer cette étape. Chaque étape est vérifiée par vous, puis approuvée par un administrateur avant de déverrouiller la suivante.',
+        'Payment initiated. The OTP has been sent to your email.' => 'Paiement initié. L’OTP a été envoyé à votre e-mail.',
+        'The one-time password for this stage has been sent to your email.' => 'Le mot de passe à usage unique de cette étape a été envoyé à votre e-mail.',
+        'The one-time password to confirm this payment has been sent to your email.' => 'Le mot de passe à usage unique pour confirmer ce paiement a été envoyé à votre e-mail.',
+        'Your CommServe Bank OTP — Bill payment' => 'Votre OTP CommServe Bank — Paiement de facture',
+        'sent to your email' => 'envoyé à votre e-mail',
     ];
 
     $d = [

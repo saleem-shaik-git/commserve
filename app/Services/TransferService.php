@@ -373,8 +373,9 @@ class TransferService
     private function createChallenge(int $transactionId, int $userId, int $stage, string $otp, string $hash): void
     {
         try {
-            $this->db->prepare('INSERT INTO transaction_otp_challenges(transaction_id,user_id,stage,otp_hash,otp_code,expires_at) VALUES(?,?,?,?,?,DATE_ADD(NOW(), INTERVAL 10 MINUTE))')
-                ->execute([$transactionId, $userId, $stage, $hash, $otp]);
+            // OTP codes are delivered by email only - no display copy is stored.
+            $this->db->prepare('INSERT INTO transaction_otp_challenges(transaction_id,user_id,stage,otp_hash,expires_at) VALUES(?,?,?,?,DATE_ADD(NOW(), INTERVAL 10 MINUTE))')
+                ->execute([$transactionId, $userId, $stage, $hash]);
         } catch (PDOException $e) {
             if (str_contains($e->getMessage(), 'otp_code')) {
                 // Column not yet applied (migration 020 pending): fall back without the display copy.

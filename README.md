@@ -164,9 +164,8 @@ php database/reconcile.php
 
 - All state-changing forms are CSRF-protected; passwords and transaction PINs
   are bcrypt-hashed; OTPs are SHA-256-hashed and expire.
-- OTPs are emailed to customers through the development mailer and also shown
-  on the confirmation page; the display copy is stored alongside the hash
-  (migration 020). Set `MAIL_DRIVER` in `.env`:
+- OTPs are delivered by email only (nothing is shown on the confirmation
+  page). `MAIL_DRIVER` in `.env` selects the transport: Set `MAIL_DRIVER` in `.env`:
   `log` (default) writes every message to `storage/mail` and shows it in
   **Admin → Dev Mailbox** — nothing external needed on localhost;
   `smtp` delivers to a local catch-all server (MailHog/Papercut/smtp4dev on

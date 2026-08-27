@@ -23,7 +23,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       }
     }elseif($action==='resend'){
       $otp=$transferService->requestNewOtp($ref,(int)$user['id']);
-      $success=t('A new one-time password has been generated for the current stage.');
+      $success=t('A new one-time password has been sent to your email.');
     }elseif($action==='cancel'){
       $transferService->cancel($ref,(int)$user['id']);
       redirect(url('transactions.php?msg=cancelled'));
@@ -33,8 +33,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   }
   try{$details=$transferService->getDetails($ref,(int)$user['id']);}catch(Throwable $ex){}
 }
-// Show the persisted OTP display copy while the stage is unresolved.
-$displayOtp=(!empty($details['otp_challenge']['otp_code'])&&empty($details['otp_stage_submitted'])&&($details['status']??'')==='pending')?$details['otp_challenge']['otp_code']:null;
+
 $currentStage=$details?(int)($details['otp_stage']??1):1;
 $approvedCount=$details?(int)($details['otp_stage_approved_count']??0):0;
 $stageSubmitted=$details&&!empty($details['otp_stage_submitted']);
@@ -106,14 +105,15 @@ require __DIR__.'/partials/header.php';require __DIR__.'/partials/sidebar.php';
     <?php elseif($status==='pending'):?>
       <div class="alert alert-primary mt-4">
         <h6 class="fw-bold mb-1"><i class="bi bi-phone me-1"></i><?=e(t('Stage %s of %s',null,[$currentStage,$totalStages]))?> — <?=e(t(TransferService::stageLabel($currentStage)))?></h6>
-        <p class="small mb-2"><?=e(t('Enter the 6-digit OTP to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.'))?></p>
+        <p class="small mb-2"><?=e(t('Enter the 6-digit OTP sent to your email to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.'))?></p>
         <?php if($details['otp_challenge']):?><div class="small"><?=e(t('Expires:'))?> <?=e($details['otp_challenge']['expires_at'])?> · <?=e(t('Attempts:'))?> <?=e((string)$details['otp_challenge']['attempts'])?>/5</div><?php endif;?>
       </div>
-      <?php if($displayOtp):?><div class="alert alert-warning"><strong><?=e(t('One-Time Password'))?> — <?=e(t('Stage'))?> <?=$currentStage?> (<?=e(t('sent to your email'))?>):</strong> <span class="fs-4 fw-bold font-monospace"><?=e($displayOtp)?></span></div><?php endif;?>
+      <div class="alert alert-warning"><i class="bi bi-envelope me-2"></i><?=e(t('The one-time password for this stage has been sent to your email.'))?></div>
       <form method="post" class="mt-3"><?=csrf_field()?>
         <input type="hidden" name="reference" value="<?=e($ref)?>"><input type="hidden" name="action" value="confirm">
         <label class="form-label fw-semibold"><?=e(t('Enter OTP'))?> — <?=e(t(TransferService::stageLabel($currentStage)))?></label>
         <input name="otp" class="form-control form-control-lg otp-input" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="••••••" required autofocus>
+        <div class="form-text"><?=e(t('Check your email for the 6-digit code.'))?></div>
         <button class="btn btn-primary btn-lg w-100 mt-3"><i class="bi bi-check-circle me-1"></i><?=e(t('Verify Stage %s of %s',null,[$currentStage,$totalStages]))?></button>
       </form>
       <div class="d-flex gap-2 mt-3">
