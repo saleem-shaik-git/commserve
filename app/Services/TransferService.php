@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/SecurityService.php';
 
-final class TransferService
+class TransferService
 {
     /** Number of sequential OTP stages a transfer must pass before admin release. */
     public const OTP_STAGES = 4;

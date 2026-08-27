@@ -15,8 +15,10 @@ final class Database {
             $options[PDO::MYSQL_ATTR_MULTI_STATEMENTS] = true;
         }
         self::$pdo = new PDO($dsn, (string)env('DB_USER','root'), (string)env('DB_PASS',''), $options);
+        self::syncTimeZone(self::$pdo);
         self::ensureRequiredTables(self::$pdo);
         return self::$pdo;
+        
     }
 
     /**
@@ -70,5 +72,15 @@ final class Database {
             return;
         }
         $pdo->exec($sql);
+    }
+
+        private static function syncTimeZone(PDO $pdo): void
+    {
+        try {
+            $offset = (new DateTime())->format('P'); // e.g. "+01:00"
+            $pdo->exec('SET time_zone = ' . $pdo->quote($offset));
+        } catch (Throwable $e) {
+            error_log('CommServe timezone sync: ' . $e->getMessage());
+        }
     }
 }
