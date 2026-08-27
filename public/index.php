@@ -65,7 +65,7 @@ try {
         </div>
         <div class="d-flex gap-2 flex-wrap">
           <span class="hero-chip"><i class="bi bi-journal-bookmark me-1"></i><?=e(t('Ledger-backed balances'))?></span>
-          <span class="hero-chip"><i class="bi bi-shield-lock me-1"></i><?=e(t('4-stage OTP + admin approval'))?></span>
+          
           <span class="hero-chip"><i class="bi bi-currency-dollar me-1"></i>USD</span>
         </div>
       </div>
@@ -76,7 +76,6 @@ try {
             <div class="display-6 fw-bold">$100,000.00</div>
             <div class="text-success small mb-3">+ <?=e(t('6% p.a. — interest posted to your statement'))?></div>
             <div class="border rounded p-2 small mb-2"><i class="bi bi-graph-up-arrow text-success me-2"></i><?=e(t('Interest is calculated daily and posted monthly to the ledger.'))?></div>
-            <div class="border rounded p-2 small"><i class="bi bi-shield-check text-primary me-2"></i><?=e(t('Every transfer is released only after admin approval.'))?></div>
           </div>
         </div>
       </div>
@@ -172,7 +171,7 @@ try {
     <div class="row g-3">
       <?php
       $features = [
-        ['bi-arrow-left-right', t('Instant transfers'), t('Own accounts, beneficiaries or any CommServe account number — protected by PIN, four OTP stages (COT → IMF → Tax Code → Final) emailed to you and released by an administrator.')],
+        ['bi-arrow-left-right', t('Instant transfers'), t('Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.')],
         ['bi-credit-card', t('Cards'), t('Virtual and debit cards with freeze controls, PIN and per-card limits, online and POS payments.')],
         ['bi-currency-bitcoin', t('Crypto wallet'), t('Buy and sell BTC, ETH, USDT, USDC and XRP against your account balance at live market rates, with conversions and PIN-verified sends.')],
         ['bi-lightning-charge', t('Bill payments'), t('Electricity, internet, cable, airtime, data and water — one-time or recurring on your schedule.')],
@@ -195,10 +194,8 @@ try {
   <section class="row g-4 mb-5">
     <div class="col-lg-6">
       <div class="card border-0 shadow-sm h-100"><div class="card-body p-4">
-        <h3 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i><?=e(t('Bank-grade controls, simulated money'))?></h3>
+        <h3 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i><?=e(t('Bank-grade controls'))?></h3>
         <ul class="list-unstyled small mb-0">
-          <li class="mb-2"><i class="bi bi-lock-fill text-success me-2"></i><?=e(t('One-time passwords are emailed and expire in 10 minutes — nothing is displayed on screen.'))?></li>
-          <li class="mb-2"><i class="bi bi-person-check-fill text-success me-2"></i><?=e(t('Every OTP stage and every transfer release is approved by a bank administrator.'))?></li>
           <li class="mb-2"><i class="bi bi-journal-bookmark-fill text-success me-2"></i><?=e(t('Double-entry ledger accounting — balances are computed, never overwritten.'))?></li>
           <li><i class="bi bi-clipboard-check-fill text-success me-2"></i><?=e(t('Full audit trail on every action, with maker-checker on admin operations.'))?></li>
         </ul>
@@ -222,7 +219,7 @@ try {
 
 <footer class="bg-white border-top py-4">
   <div class="container d-flex justify-content-between flex-wrap gap-2 small text-muted">
-    <span>© <?=date('Y')?> <?=e(APP_NAME)?> · <?=e(t('All rates are simulated — no real financial institution is involved.'))?></span>
+   © <?=date('Y')?> <?=e(APP_NAME)?>
     <span><a href="<?=url('login.php')?>" class="text-decoration-none"><?=e(t('Sign in'))?></a> · <a href="<?=url('register.php')?>" class="text-decoration-none"><?=e(t('Create account'))?></a></span>
   </div>
 </footer>

@@ -703,11 +703,8 @@ function translations(): array
         'Routing Number' => 'Routing Number',
         'Routing number must be 4-20 letters/digits.' => 'Routing number must be 4-20 letters/digits.',
         // --- Public landing page ---
-        '4-stage OTP + admin approval' => '4-stage OTP + admin approval',
         '6% p.a. — interest posted to your statement' => '6% p.a. — interest posted to your statement',
-        'All rates are simulated — no real financial institution is involved.' => 'All rates are simulated — no real financial institution is involved.',
         'Apply in minutes — every application is credit-scored from your real account history, and repayments post straight to the ledger.' => 'Apply in minutes — every application is credit-scored from your real account history, and repayments post straight to the ledger.',
-        'Bank-grade controls, simulated money' => 'Bank-grade controls, simulated money',
         'Banking that works as hard as you do' => 'Banking that works as hard as you do',
         'Buy and sell BTC, ETH, USDT, USDC and XRP against your account balance at live market rates, with conversions and PIN-verified sends.' => 'Buy and sell BTC, ETH, USDT, USDC and XRP against your account balance at live market rates, with conversions and PIN-verified sends.',
         'Cards' => 'Cards',
@@ -717,8 +714,6 @@ function translations(): array
         'Crypto wallet' => 'Crypto wallet',
         'Digital banking built for daily life.' => 'Digital banking built for daily life.',
         'Double-entry ledger accounting — balances are computed, never overwritten.' => 'Double-entry ledger accounting — balances are computed, never overwritten.',
-        'Every OTP stage and every transfer release is approved by a bank administrator.' => 'Every OTP stage and every transfer release is approved by a bank administrator.',
-        'Every transfer is released only after admin approval.' => 'Every transfer is released only after admin approval.',
         'Everything in one app' => 'Everything in one app',
         'Example' => 'Example',
         'Example — Premium Savings' => 'Example — Premium Savings',
@@ -732,9 +727,7 @@ function translations(): array
         'Ledger-generated PDF and CSV statements with running balances, any period.' => 'Ledger-generated PDF and CSV statements with running balances, any period.',
         'Live chat support' => 'Live chat support',
         'Lock funds for a fixed term at a fixed rate — principal and interest are paid to your account at maturity. Early withdrawal available with a penalty.' => 'Lock funds for a fixed term at a fixed rate — principal and interest are paid to your account at maturity. Early withdrawal available with a penalty.',
-        'One-time passwords are emailed and expire in 10 minutes — nothing is displayed on screen.' => 'One-time passwords are emailed and expire in 10 minutes — nothing is displayed on screen.',
         'Open savings products, place deposits and apply for loans.' => 'Open savings products, place deposits and apply for loans.',
-        'Own accounts, beneficiaries or any CommServe account number — protected by PIN, four OTP stages (COT → IMF → Tax Code → Final) emailed to you and released by an administrator.' => 'Own accounts, beneficiaries or any CommServe account number — protected by PIN, four OTP stages (COT → IMF → Tax Code → Final) emailed to you and released by an administrator.',
         'Pick the account that fits you — interest is accrued daily and posted straight to your ledger-backed statement.' => 'Pick the account that fits you — interest is accrued daily and posted straight to your ledger-backed statement.',
         'Product catalogue is being updated — sign up and check back soon.' => 'Product catalogue is being updated — sign up and check back soon.',
         'Register' => 'Register',
@@ -751,6 +744,8 @@ function translations(): array
         'Bill payments' => 'Bill payments',
         'Electricity, internet, cable, airtime, data and water — one-time or recurring on your schedule.' => 'Electricity, internet, cable, airtime, data and water — one-time or recurring on your schedule.',
         'Open your account' => 'Open your account',
+        'Bank-grade controls' => 'Bank-grade controls',
+        'Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.' => 'Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.',
     ];
 
     $es = [
@@ -1418,11 +1413,8 @@ function translations(): array
         'Routing Number' => 'Número de ruta',
         'Routing number must be 4-20 letters/digits.' => 'El número de ruta debe tener 4-20 letras/dígitos.',
         // --- Public landing page ---
-        '4-stage OTP + admin approval' => 'OTP de 4 etapas + aprobación admin',
         '6% p.a. — interest posted to your statement' => '6% p.a. — interés abonado a su estado de cuenta',
-        'All rates are simulated — no real financial institution is involved.' => 'Todas las tasas son simuladas: ninguna institución financiera real participa.',
         'Apply in minutes — every application is credit-scored from your real account history, and repayments post straight to the ledger.' => 'Solicite en minutos: cada solicitud se puntúa con su historial real y los pagos se registran directamente en el libro mayor.',
-        'Bank-grade controls, simulated money' => 'Controles de nivel bancario, dinero simulado',
         'Banking that works as hard as you do' => 'La banca que trabaja tanto como usted',
         'Buy and sell BTC, ETH, USDT, USDC and XRP against your account balance at live market rates, with conversions and PIN-verified sends.' => 'Compre y venda BTC, ETH, USDT, USDC y XRP con el saldo de su cuenta a tasas de mercado en vivo, con conversiones y envíos verificados por PIN.',
         'Cards' => 'Tarjetas',
@@ -1432,8 +1424,6 @@ function translations(): array
         'Crypto wallet' => 'Monedero de cripto',
         'Digital banking built for daily life.' => 'Banca digital para la vida diaria.',
         'Double-entry ledger accounting — balances are computed, never overwritten.' => 'Contabilidad de libro mayor de doble entrada: los saldos se calculan, nunca se sobrescriben.',
-        'Every OTP stage and every transfer release is approved by a bank administrator.' => 'Cada etapa de OTP y cada liberación de transferencia las aprueba un administrador del banco.',
-        'Every transfer is released only after admin approval.' => 'Cada transferencia se libera solo tras la aprobación del administrador.',
         'Everything in one app' => 'Todo en una sola app',
         'Example' => 'Ejemplo',
         'Example — Premium Savings' => 'Ejemplo — Ahorro Premium',
@@ -1447,9 +1437,7 @@ function translations(): array
         'Ledger-generated PDF and CSV statements with running balances, any period.' => 'Estados de cuenta en PDF y CSV generados del libro mayor, con saldos acumulados, cualquier período.',
         'Live chat support' => 'Soporte por chat en vivo',
         'Lock funds for a fixed term at a fixed rate — principal and interest are paid to your account at maturity. Early withdrawal available with a penalty.' => 'Bloquee fondos a plazo fijo y tasa fija: el capital y el interés se pagan a su cuenta al vencimiento. Retiro anticipado disponible con penalización.',
-        'One-time passwords are emailed and expire in 10 minutes — nothing is displayed on screen.' => 'Las contraseñas de un solo uso se envían por correo y expiran en 10 minutos: no se muestran en pantalla.',
         'Open savings products, place deposits and apply for loans.' => 'Abra productos de ahorro, constituya depósitos y solicite préstamos.',
-        'Own accounts, beneficiaries or any CommServe account number — protected by PIN, four OTP stages (COT → IMF → Tax Code → Final) emailed to you and released by an administrator.' => 'Cuentas propias, beneficiarios o cualquier número de cuenta CommServe — protegido con PIN, cuatro etapas de OTP (COT → IMF → Código fiscal → Final) enviadas a su correo y liberadas por un administrador.',
         'Pick the account that fits you — interest is accrued daily and posted straight to your ledger-backed statement.' => 'Elija la cuenta que le convenga: el interés se devenga a diario y se abona directamente a su estado de cuenta basado en libro mayor.',
         'Product catalogue is being updated — sign up and check back soon.' => 'El catálogo de productos se está actualizando: regístrese y vuelva pronto.',
         'Register' => 'Regístrese',
@@ -1466,6 +1454,8 @@ function translations(): array
         'Bill payments' => 'Pago de servicios',
         'Electricity, internet, cable, airtime, data and water — one-time or recurring on your schedule.' => 'Electricidad, internet, cable, tiempo aire, datos y agua: único o recurrente según su programación.',
         'Open your account' => 'Abra su cuenta',
+        'Bank-grade controls' => 'Controles de nivel bancario',
+        'Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.' => 'Cuentas propias, beneficiarios o cualquier número de cuenta CommServe — protegido con su PIN de transacción.',
     ];
 
     $fr = [
@@ -2139,11 +2129,8 @@ function translations(): array
         'Routing Number' => 'Numéro de routage',
         'Routing number must be 4-20 letters/digits.' => 'Le numéro de routage doit contenir 4-20 lettres/chiffres.',
         // --- Public landing page ---
-        '4-stage OTP + admin approval' => 'OTP 4 étapes + approbation admin',
         '6% p.a. — interest posted to your statement' => '6% p.a. — intérêts versés sur votre relevé',
-        'All rates are simulated — no real financial institution is involved.' => 'Tous les taux sont simulés — aucun établissement financier réel n’est impliqué.',
         'Apply in minutes — every application is credit-scored from your real account history, and repayments post straight to the ledger.' => 'Demandez en quelques minutes — chaque demande est notée d’après votre historique réel et les remboursements sont inscrits au grand livre.',
-        'Bank-grade controls, simulated money' => 'Contrôles bancaires, argent simulé',
         'Banking that works as hard as you do' => 'La banque qui travaille aussi dur que vous',
         'Buy and sell BTC, ETH, USDT, USDC and XRP against your account balance at live market rates, with conversions and PIN-verified sends.' => 'Achetez et vendez BTC, ETH, USDT, USDC et XRP sur votre solde aux taux du marché, avec conversions et envois vérifiés par PIN.',
         'Cards' => 'Cartes',
@@ -2153,8 +2140,6 @@ function translations(): array
         'Crypto wallet' => 'Portefeuille crypto',
         'Digital banking built for daily life.' => 'La banque numérique au quotidien.',
         'Double-entry ledger accounting — balances are computed, never overwritten.' => 'Comptabilité en partie double au grand livre — les soldes sont calculés, jamais écrasés.',
-        'Every OTP stage and every transfer release is approved by a bank administrator.' => 'Chaque étape OTP et chaque libération de virement sont approuvées par un administrateur.',
-        'Every transfer is released only after admin approval.' => 'Chaque virement n’est libéré qu’après approbation d’un administrateur.',
         'Everything in one app' => 'Tout en une seule app',
         'Example' => 'Exemple',
         'Example — Premium Savings' => 'Exemple — Épargne Premium',
@@ -2168,9 +2153,7 @@ function translations(): array
         'Ledger-generated PDF and CSV statements with running balances, any period.' => 'Relevés PDF et CSV générés du grand livre, avec soldes progressifs, toute période.',
         'Live chat support' => 'Support par chat en direct',
         'Lock funds for a fixed term at a fixed rate — principal and interest are paid to your account at maturity. Early withdrawal available with a penalty.' => 'Bloquez des fonds à terme et taux fixes — le capital et les intérêts sont versés à l’échéance. Retrait anticipé possible avec pénalité.',
-        'One-time passwords are emailed and expire in 10 minutes — nothing is displayed on screen.' => 'Les mots de passe à usage unique sont envoyés par e-mail et expirent en 10 minutes — rien n’est affiché à l’écran.',
         'Open savings products, place deposits and apply for loans.' => 'Ouvrez des produits d’épargne, placez des dépôts et demandez des prêts.',
-        'Own accounts, beneficiaries or any CommServe account number — protected by PIN, four OTP stages (COT → IMF → Tax Code → Final) emailed to you and released by an administrator.' => 'Comptes propres, bénéficiaires ou tout numéro de compte CommServe — protégé par PIN, quatre étapes OTP (COT → IMF → Code fiscal → Final) envoyées par e-mail et libérées par un administrateur.',
         'Pick the account that fits you — interest is accrued daily and posted straight to your ledger-backed statement.' => 'Choisissez le compte qui vous convient — les intérêts sont calculés chaque jour et versés directement sur votre relevé adossé au grand livre.',
         'Product catalogue is being updated — sign up and check back soon.' => 'Le catalogue de produits est en cours de mise à jour — inscrivez-vous et revenez bientôt.',
         'Register' => 'S’inscrire',
@@ -2187,6 +2170,8 @@ function translations(): array
         'Bill payments' => 'Paiement de factures',
         'Electricity, internet, cable, airtime, data and water — one-time or recurring on your schedule.' => 'Électricité, internet, câble, crédit mobile, données et eau — ponctuel ou récurrent à votre rythme.',
         'Open your account' => 'Ouvrez votre compte',
+        'Bank-grade controls' => 'Contrôles bancaires',
+        'Own accounts, beneficiaries or any CommServe account number — protected by your transaction PIN.' => 'Comptes propres, bénéficiaires ou tout numéro de compte CommServe — protégé par votre code PIN.',
     ];
 
     $d = [
