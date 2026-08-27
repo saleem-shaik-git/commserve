@@ -5,11 +5,20 @@ require_once __DIR__ . '/SecurityService.php';
 
 final class TransferService
 {
+    /** Number of sequential OTP stages a transfer must pass before admin release. */
+    public const OTP_STAGES = 4;
+    private const STAGE_LABELS = [1 => 'Identity verification', 2 => 'Amount verification', 3 => 'Beneficiary verification', 4 => 'Final authorization'];
+
     private SecurityService $security;
 
     public function __construct(private PDO $db)
     {
         $this->security = new SecurityService($db);
+    }
+
+    public static function stageLabel(int $stage): string
+    {
+        return self::STAGE_LABELS[$stage] ?? ('Stage ' . $stage);
     }
 
     /**
@@ -78,10 +87,10 @@ final class TransferService
                 if (!str_contains($e->getMessage(), 'pending_transfers')) throw $e;
             }
 
-            // Generate OTP
+            // Generate OTP (stage 1 of the four-stage verification chain)
             $otp = (string)random_int(100000, 999999);
             $hash = hash('sha256', $otp);
-            $stmt = $this->db->prepare('INSERT INTO transaction_otp_challenges(transaction_id,user_id,otp_hash,expires_at) VALUES(?,?,?,DATE_ADD(NOW(), INTERVAL 10 MINUTE))');
+            $stmt = $this->db->prepare('INSERT INTO transaction_otp_challenges(transaction_id,user_id,stage,otp_hash,expires_at) VALUES(?,?,1,?,DATE_ADD(NOW(), INTERVAL 10 MINUTE))');
             $stmt->execute([$transactionId, $userId, $hash]);
             $stmt = $this->db->prepare('SELECT expires_at FROM transaction_otp_challenges WHERE transaction_id=? ORDER BY id DESC LIMIT 1');
             $stmt->execute([$transactionId]);
@@ -104,9 +113,15 @@ final class TransferService
     }
 
     /**
-     * Confirm pending transfer with OTP - completes ledger entries
+     * Confirm a pending transfer with the OTP for the current stage.
+     *
+     * Stages 1-3 verified  ->  issues the OTP for the next stage and returns
+     *                         ['completed'=>false, 'stage'=>n, 'next_stage'=>n+1, 'otp'=>demo OTP].
+     * Stage 4 verified     ->  transaction becomes 'awaiting_approval', an
+     *                         admin_action_requests row is raised for admin release,
+     *                         and ['completed'=>true] is returned.
      */
-    public function confirm(string $reference, int $userId, string $otp): string
+    public function confirm(string $reference, int $userId, string $otp): array
     {
         $otp = trim($otp);
         if ($otp === '') throw new InvalidArgumentException('OTP is required.');
@@ -115,6 +130,8 @@ final class TransferService
         try {
             $tx = $this->lockTransaction($reference);
             if ((int)$tx['initiated_by'] !== $userId) throw new RuntimeException('Transaction does not belong to you.');
+            if ($tx['status'] === 'awaiting_approval') throw new RuntimeException('Transfer already passed all verification stages and is awaiting admin approval.');
+            if ($tx['status'] === 'completed') throw new RuntimeException('Transfer has already been completed.');
             if ($tx['status'] !== 'pending') throw new RuntimeException('Transaction is not pending. Current status: ' . $tx['status']);
 
             // Get pending mapping
@@ -133,50 +150,50 @@ final class TransferService
                 throw new RuntimeException('Transfer details not found. Please re-initiate.');
             }
 
-            // Lock accounts
-            $ids = [$fromAccountId, $toAccountId];
-            sort($ids, SORT_NUMERIC);
-            $first = $this->lockAccount($ids[0]);
-            $second = $this->lockAccount($ids[1]);
-            $from = $fromAccountId === (int)$first['id'] ? $first : $second;
-            $to   = $toAccountId === (int)$first['id'] ? $first : $second;
-
-            if ($from['status'] !== 'active' || $to['status'] !== 'active') throw new RuntimeException('Accounts must be active.');
-
-            // OTP verification
+            // Current-stage OTP challenge
             $stmt = $this->db->prepare('SELECT * FROM transaction_otp_challenges WHERE transaction_id=? AND user_id=? AND verified_at IS NULL ORDER BY id DESC LIMIT 1 FOR UPDATE');
             $stmt->execute([(int)$tx['id'], $userId]);
             $challenge = $stmt->fetch();
             if (!$challenge) throw new RuntimeException('OTP challenge not found. Please request a new transfer.');
-            if (strtotime($challenge['expires_at']) < time()) throw new RuntimeException('OTP expired. Please re-initiate transfer.');
+            if (strtotime($challenge['expires_at']) < time()) throw new RuntimeException('OTP expired. Please resend the OTP for stage ' . ($challenge['stage'] ?? 1) . '.');
             if ((int)$challenge['attempts'] >= 5) throw new RuntimeException('Too many OTP attempts. Transfer locked.');
+
+            $stage = max(1, (int)($challenge['stage'] ?? 1));
 
             if (!hash_equals($challenge['otp_hash'], hash('sha256', $otp))) {
                 $this->db->prepare('UPDATE transaction_otp_challenges SET attempts=attempts+1 WHERE id=?')->execute([$challenge['id']]);
-                throw new RuntimeException('Invalid OTP.');
+                throw new RuntimeException('Invalid OTP for stage ' . $stage . ' (' . self::stageLabel($stage) . ').');
             }
 
-            // Check balance again
+            // Mark this stage verified
+            $this->db->prepare('UPDATE transaction_otp_challenges SET verified_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$challenge['id']]);
+            $this->recordEvent((int)$tx['id'], 'otp_stage_verified', 'pending', 'pending', $userId, ['stage' => $stage, 'label' => self::stageLabel($stage)]);
+
+            if ($stage < self::OTP_STAGES) {
+                // Issue the next stage OTP
+                $next = $stage + 1;
+                $newOtp = (string)random_int(100000, 999999);
+                $this->db->prepare('INSERT INTO transaction_otp_challenges(transaction_id,user_id,stage,otp_hash,expires_at) VALUES(?,?,?,?,DATE_ADD(NOW(), INTERVAL 10 MINUTE))')
+                    ->execute([(int)$tx['id'], $userId, $next, hash('sha256', $newOtp)]);
+                $stmt = $this->db->prepare('SELECT expires_at FROM transaction_otp_challenges WHERE transaction_id=? ORDER BY id DESC LIMIT 1');
+                $stmt->execute([(int)$tx['id']]);
+                $expires = (string)$stmt->fetchColumn();
+                $this->recordEvent((int)$tx['id'], 'otp_stage_issued', 'pending', 'pending', $userId, ['stage' => $next, 'label' => self::stageLabel($next)]);
+                $this->db->commit();
+                return ['completed' => false, 'reference' => $reference, 'stage' => $stage, 'next_stage' => $next,
+                        'next_label' => self::stageLabel($next), 'otp' => $newOtp, 'expires_at' => $expires];
+            }
+
+            // Final stage verified: hand the transfer to admin approval.
             $balance = $this->calculateBalance($fromAccountId);
             if ((float)$balance < (float)$tx['amount']) throw new RuntimeException('Insufficient funds at confirmation time.');
-
-            // Create ledger entries
-            $this->db->prepare('INSERT INTO ledger_entries(transaction_id,account_id,entry_type,amount) VALUES(?,?,?,?)')->execute([(int)$tx['id'], $fromAccountId, 'debit', $tx['amount']]);
-            $this->db->prepare('INSERT INTO ledger_entries(transaction_id,account_id,entry_type,amount) VALUES(?,?,?,?)')->execute([(int)$tx['id'], $toAccountId, 'credit', $tx['amount']]);
-
-            // Complete transaction
-            $this->db->prepare('UPDATE transactions SET status="completed", completed_at=CURRENT_TIMESTAMP WHERE id=?')->execute([(int)$tx['id']]);
-            $this->db->prepare('UPDATE transaction_otp_challenges SET verified_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$challenge['id']]);
-
-            // Recalculate balances
-            $this->recalculateBalance($fromAccountId);
-            $this->recalculateBalance($toAccountId);
-
-            $this->recordEvent((int)$tx['id'], 'otp_verified', 'pending', 'pending', $userId);
-            $this->recordEvent((int)$tx['id'], 'transfer_completed', 'pending', 'completed', $userId);
-
+            $this->db->prepare('UPDATE transactions SET status="awaiting_approval" WHERE id=?')->execute([(int)$tx['id']]);
+            $this->db->prepare('INSERT INTO admin_action_requests(action_type,entity_type,entity_id,requested_by,reason) VALUES(?,?,?,?,?)')
+                ->execute(['transfer_approval', 'transaction', (int)$tx['id'], $userId,
+                           'Customer completed 4-stage OTP verification for transfer ' . $tx['reference'] . ' (' . $tx['amount'] . ' ' . $tx['currency'] . ')']);
+            $this->recordEvent((int)$tx['id'], 'submitted_for_approval', 'pending', 'awaiting_approval', $userId);
             $this->db->commit();
-            return $reference;
+            return ['completed' => true, 'awaiting_approval' => true, 'reference' => $reference, 'stage' => $stage];
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
@@ -231,6 +248,9 @@ final class TransferService
         $stmt = $this->db->prepare('SELECT * FROM transaction_otp_challenges WHERE transaction_id=? ORDER BY id DESC LIMIT 1');
         $stmt->execute([(int)$row['id']]);
         $row['otp_challenge'] = $stmt->fetch() ?: null;
+        $row['otp_stages_total'] = self::OTP_STAGES;
+        $row['otp_stage'] = max(1, (int)($row['otp_challenge']['stage'] ?? 1));
+        $row['otp_stage_label'] = self::stageLabel($row['otp_stage']);
 
         $stmt = $this->db->prepare('SELECT * FROM transaction_events WHERE transaction_id=? ORDER BY id ASC');
         $stmt->execute([(int)$row['id']]);
@@ -246,9 +266,14 @@ final class TransferService
             $tx = $this->lockTransaction($reference);
             if ((int)$tx['initiated_by'] !== $userId) throw new RuntimeException('Not yours.');
             if ($tx['status'] !== 'pending') throw new RuntimeException('Only pending can get new OTP.');
+            $stage = 1;
+            $stmt = $this->db->prepare('SELECT stage FROM transaction_otp_challenges WHERE transaction_id=? ORDER BY id DESC LIMIT 1');
+            $stmt->execute([(int)$tx['id']]);
+            $found = $stmt->fetchColumn();
+            if ($found !== false && $found !== null) $stage = max(1, (int)$found);
             $otp = (string)random_int(100000, 999999);
             $hash = hash('sha256', $otp);
-            $this->db->prepare('INSERT INTO transaction_otp_challenges(transaction_id,user_id,otp_hash,expires_at) VALUES(?,?,?,DATE_ADD(NOW(), INTERVAL 10 MINUTE))')->execute([(int)$tx['id'], $userId, $hash]);
+            $this->db->prepare('INSERT INTO transaction_otp_challenges(transaction_id,user_id,stage,otp_hash,expires_at) VALUES(?,?,?,?,DATE_ADD(NOW(), INTERVAL 10 MINUTE))')->execute([(int)$tx['id'], $userId, $stage, $hash]);
             $this->db->commit();
             return $otp;
         } catch (Throwable $e) {

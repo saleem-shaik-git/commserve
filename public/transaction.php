@@ -60,7 +60,7 @@ require __DIR__ . '/partials/sidebar.php';
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-start">
               <div><h5 class="fw-bold mb-1"><?= e(strtoupper($tx['type'] ?? 'Transaction')) ?></h5><div class="small text-muted font-monospace"><?= e($tx['reference']) ?></div></div>
-              <span class="badge fs-6 <?= ($tx['status']==='completed'?'text-bg-success':($tx['status']==='pending'?'text-bg-warning':'text-bg-secondary')) ?>"><?= e(strtoupper($tx['status'])) ?></span>
+              <span class="badge fs-6 <?= ($tx['status']==='completed'?'text-bg-success':($tx['status']==='pending'?'text-bg-warning':($tx['status']==='awaiting_approval'?'text-bg-info':'text-bg-secondary'))) ?>"><?= e(strtoupper($tx['status'])) ?></span>
             </div>
             <div class="display-6 fw-bold mt-4">$<?= number_format((float)($tx['amount'] ?? 0),2) ?></div>
             <div class="text-muted small"><?= e($tx['currency'] ?? DEFAULT_CURRENCY) ?> · <?= e($tx['description'] ?? '') ?></div>
@@ -74,7 +74,10 @@ require __DIR__ . '/partials/sidebar.php';
             </dl>
             <div class="d-grid gap-2 mt-4">
               <?php if (($tx['status'] ?? '') === 'pending'): ?>
-                <a href="<?=url('transfer-confirm.php')?>?ref=<?= urlencode($ref) ?>" class="btn btn-primary"><i class="bi bi-shield-lock me-2"></i>Confirm with OTP</a>
+                <a href="<?=url('transfer-confirm.php')?>?ref=<?= urlencode($ref) ?>" class="btn btn-primary"><i class="bi bi-shield-lock me-2"></i>Continue OTP verification</a>
+              <?php endif; ?>
+              <?php if (($tx['status'] ?? '') === 'awaiting_approval'): ?>
+                <div class="alert alert-info py-2 small mb-0"><i class="bi bi-person-check me-1"></i>All 4 OTP stages verified — awaiting admin release.</div>
               <?php endif; ?>
               <a href="<?=url('transfer-receipt.php')?>?ref=<?= urlencode($ref) ?>" class="btn btn-outline-primary"><i class="bi bi-receipt me-2"></i>View Receipt</a>
               <a href="<?=url('transactions.php')?>" class="btn btn-outline-secondary">Back to Transactions</a>

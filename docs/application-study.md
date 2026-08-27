@@ -211,3 +211,22 @@ Every money mover follows the same protocol:
 | 7 | Opening balance 0 confusion | Documented in code: 0.0 is correct when no start date is given (statement begins at inception) |
 
 **Verification performed:** PHP-tag/brace/paren balance check across all 100 PHP files (no syntax-level breakage); audit of every `<?=url(` insertion (all in HTML attribute context); partial include balance per page; query-string links and redirects manually reviewed. Runtime smoke test against MySQL could not be executed in this sandbox (no PHP/MySQL available) — run `php database/migrate.php` after pulling.
+
+---
+
+## 11. Phase 12 — 4-stage OTP transfers with admin release (2026-08-27)
+
+**Flow:** `initiate (PIN)` → **Stage 1 OTP: Identity** → **Stage 2 OTP: Amount** → **Stage 3 OTP: Beneficiary** → **Stage 4 OTP: Final authorization** → `awaiting_approval` → **Admin release (Approvals screen)** → ledger posts → `completed`.
+
+| Piece | Change |
+|---|---|
+| `database/migrations/019_transfer_4otp_admin_approval.sql` | transactions status ENUM += `awaiting_approval`; `transaction_otp_challenges.stage` column + index; `transfer_pending_approval` / `transfer_rejected` notification templates |
+| `TransferService` | `OTP_STAGES=4` + `stageLabel()`; `initiate()` issues stage-1 OTP; `confirm()` verifies the current stage, issues the next OTP (stages 1–3) or submits for approval (stage 4, with soft balance re-check); `requestNewOtp()` regenerates for the current stage; `getDetails()` exposes stage progress |
+| `NotifyingTransferService` | notifies `transfer_pending_approval` when stage 4 passes; `notifyApproved()` / `notifyRejected()` hooks for the admin path |
+| `AdminOperationsService` | `pendingActions()` shows transaction reference/amount; `approveAction()` branch releases transfer approvals via `releaseApprovedTransferLocked()` (account locks in sorted order, currency + balance re-validation, ledger pair, balance recalc, events, audit, customer notification); `rejectAction()` branch fails the transaction with reason + notification |
+| `public/transfer-confirm.php` | 4-step stepper UI, per-stage OTP entry, resend/cancel, awaiting-approval and completed states |
+| Receipt / transaction / dashboard | `awaiting_approval` status badges and context panels; pending lists include awaiting-approval transfers |
+| Admin Approvals page | Action badges, transaction reference links with amount/status, transfer-release labelling |
+| Bill payments / scheduled payments | Unchanged — single-OTP flows by design (feature scoped to transfers) |
+
+Security properties: funds move **only** on admin release; OTPs remain SHA-256-hashed/expiring/attempt-capped per stage; approval executes inside one DB transaction with row locks; rejection leaves no partial ledger state.

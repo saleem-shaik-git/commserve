@@ -71,7 +71,7 @@ final class AccountService
             LEFT JOIN accounts ta ON ta.id=pt.to_account_id
             LEFT JOIN account_types fat ON fat.id=fa.account_type_id
             LEFT JOIN account_types tat ON tat.id=ta.account_type_id
-            WHERE t.initiated_by=? AND t.status IN ("pending","processing")
+            WHERE t.initiated_by=? AND t.status IN ("pending","processing","awaiting_approval")
             ORDER BY t.id DESC LIMIT ' . $limit;
         try {
             $stmt = $this->db->prepare($sql);

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/NotifyingTransferService.php';
+
 final class AdminOperationsService
 {
     public function __construct(private PDO $db) {}
@@ -10,9 +12,9 @@ final class AdminOperationsService
     public function transaction(string $reference):?array{$stmt=$this->db->prepare('SELECT t.*,u.email FROM transactions t LEFT JOIN users u ON u.id=t.initiated_by WHERE t.reference=? LIMIT 1');$stmt->execute([$reference]);$t=$stmt->fetch();if(!$t)return null;$stmt=$this->db->prepare('SELECT le.*,a.account_number,a.user_id FROM ledger_entries le JOIN accounts a ON a.id=le.account_id WHERE le.transaction_id=? ORDER BY le.id');$stmt->execute([(int)$t['id']]);$t['ledger']=$stmt->fetchAll();$stmt=$this->db->prepare('SELECT te.*,u.email FROM transaction_events te LEFT JOIN users u ON u.id=te.actor_user_id WHERE te.transaction_id=? ORDER BY te.id DESC');$stmt->execute([(int)$t['id']]);$t['events']=$stmt->fetchAll();return $t;}
 
     public function requestAdjustment(string $reference,int $adminId,string $reason,string $operation):int{return $this->requestAction($operation,'transaction',$this->transactionId($reference),$adminId,$reason);}
-    public function approveAction(int $requestId,int $adminId,string $decisionReason=''):string{$this->db->beginTransaction();try{$stmt=$this->db->prepare('SELECT * FROM admin_action_requests WHERE id=? FOR UPDATE');$stmt->execute([$requestId]);$r=$stmt->fetch();if(!$r||$r['status']!=='pending')throw new RuntimeException('Approval request is not pending.');if((int)$r['requested_by']===$adminId)throw new RuntimeException('Maker-checker rule: the requester cannot approve their own action.');if($r['action_type']==='reversal'||$r['action_type']==='refund'){$this->adjustTransactionLocked((int)$r['entity_id'],$adminId,$r['reason'],$r['action_type']);}$this->db->prepare('UPDATE admin_action_requests SET status="approved",approved_by=?,decision_reason=?,decided_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$adminId,trim($decisionReason)?:null,$requestId]);$this->audit($adminId,'admin_action_approved','admin_action_request',$requestId,['action_type'=>$r['action_type'],'entity_id'=>$r['entity_id']]);$this->db->commit();return $r['action_type'];}catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}}
-    public function rejectAction(int $requestId,int $adminId,string $reason):void{$reason=trim($reason);if($reason==='')throw new InvalidArgumentException('A rejection reason is required.');$stmt=$this->db->prepare('SELECT requested_by,status FROM admin_action_requests WHERE id=?');$stmt->execute([$requestId]);$r=$stmt->fetch();if(!$r||$r['status']!=='pending')throw new RuntimeException('Approval request is not pending.');if((int)$r['requested_by']===$adminId)throw new RuntimeException('Requester cannot reject their own action.');$this->db->prepare('UPDATE admin_action_requests SET status="rejected",approved_by=?,decision_reason=?,decided_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$adminId,$reason,$requestId]);$this->audit($adminId,'admin_action_rejected','admin_action_request',$requestId,['reason'=>$reason]);}
-    public function pendingActions():array{$stmt=$this->db->query('SELECT ar.*,rq.email requester_email,ap.email approver_email FROM admin_action_requests ar JOIN users rq ON rq.id=ar.requested_by LEFT JOIN users ap ON ap.id=ar.approved_by WHERE ar.status="pending" ORDER BY ar.id DESC');return $stmt->fetchAll();}
+    public function approveAction(int $requestId,int $adminId,string $decisionReason=''):string{$this->db->beginTransaction();try{$stmt=$this->db->prepare('SELECT * FROM admin_action_requests WHERE id=? FOR UPDATE');$stmt->execute([$requestId]);$r=$stmt->fetch();if(!$r||$r['status']!=='pending')throw new RuntimeException('Approval request is not pending.');if((int)$r['requested_by']===$adminId)throw new RuntimeException('Maker-checker rule: the requester cannot approve their own action.');if($r['action_type']==='reversal'||$r['action_type']==='refund'){$this->adjustTransactionLocked((int)$r['entity_id'],$adminId,$r['reason'],$r['action_type']);}elseif($r['action_type']==='transfer_approval'){$this->releaseApprovedTransferLocked((int)$r['entity_id'],$adminId);}$this->db->prepare('UPDATE admin_action_requests SET status="approved",approved_by=?,decision_reason=?,decided_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$adminId,trim($decisionReason)?:null,$requestId]);$this->audit($adminId,'admin_action_approved','admin_action_request',$requestId,['action_type'=>$r['action_type'],'entity_id'=>$r['entity_id']]);$this->db->commit();return $r['action_type'];}catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}}
+    public function rejectAction(int $requestId,int $adminId,string $reason):void{$reason=trim($reason);if($reason==='')throw new InvalidArgumentException('A rejection reason is required.');$this->db->beginTransaction();try{$stmt=$this->db->prepare('SELECT action_type,entity_id,requested_by,status FROM admin_action_requests WHERE id=? FOR UPDATE');$stmt->execute([$requestId]);$r=$stmt->fetch();if(!$r||$r['status']!=='pending')throw new RuntimeException('Approval request is not pending.');if((int)$r['requested_by']===$adminId)throw new RuntimeException('Requester cannot reject their own action.');if($r['action_type']==='transfer_approval'){$this->rejectApprovedTransferLocked((int)$r['entity_id'],$adminId,$reason);}$this->db->prepare('UPDATE admin_action_requests SET status="rejected",approved_by=?,decision_reason=?,decided_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$adminId,$reason,$requestId]);$this->audit($adminId,'admin_action_rejected','admin_action_request',$requestId,['reason'=>$reason]);$this->db->commit();}catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}}
+    public function pendingActions():array{$stmt=$this->db->query('SELECT ar.*,rq.email requester_email,ap.email approver_email,t.reference entity_reference,t.amount entity_amount,t.currency entity_currency,t.status entity_status FROM admin_action_requests ar JOIN users rq ON rq.id=ar.requested_by LEFT JOIN users ap ON ap.id=ar.approved_by LEFT JOIN transactions t ON t.id=ar.entity_id AND ar.entity_type="transaction" WHERE ar.status="pending" ORDER BY ar.id DESC');return $stmt->fetchAll();}
     public function accounts(string $q='',int $limit=200):array{$limit=max(1,min(500,$limit));$like='%'.$q.'%';$stmt=$this->db->prepare('SELECT a.id,a.account_number,a.available_balance,a.status,at.name account_type,at.currency,u.id user_id,u.first_name,u.last_name,u.email FROM accounts a JOIN account_types at ON at.id=a.account_type_id JOIN users u ON u.id=a.user_id WHERE a.account_number LIKE ? OR u.email LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? ORDER BY a.id DESC LIMIT '.$limit);$stmt->execute([$like,$like,$like,$like]);return $stmt->fetchAll();}
     public function accountTransactions(int $accountId,int $limit=100):array{$limit=max(1,min(200,$limit));$stmt=$this->db->prepare('SELECT t.reference,t.type,t.status,t.amount,t.currency,t.description,t.created_at,le.entry_type FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? ORDER BY le.id DESC LIMIT '.$limit);$stmt->execute([$accountId]);return $stmt->fetchAll();}
     public function setAccountStatus(int $accountId,string $status,int $adminId):void{if(!in_array($status,['active','frozen','closed'],true))throw new InvalidArgumentException('Invalid account status.');$stmt=$this->db->prepare('UPDATE accounts SET status=? WHERE id=?');$stmt->execute([$status,$accountId]);if($stmt->rowCount()===0)throw new RuntimeException('Account not found or unchanged.');$this->audit($adminId,'account_status_changed','account',$accountId,['status'=>$status]);}
@@ -23,6 +25,62 @@ final class AdminOperationsService
     public function latestReconciliation():?array{$stmt=$this->db->query('SELECT * FROM reconciliation_runs ORDER BY id DESC LIMIT 1');return $stmt->fetch()?:null;}
     public function reconciliationMismatches():array{$latest=$this->latestReconciliation();if(!$latest||empty($latest['details']))return [];return json_decode($latest['details'],true,512,JSON_THROW_ON_ERROR)?:[];}
     public function recentAuditEvents(int $limit=100):array{$limit=max(1,min(200,$limit));$stmt=$this->db->query('SELECT al.*,u.email FROM audit_logs al LEFT JOIN users u ON u.id=al.user_id ORDER BY al.id DESC LIMIT '.$limit);return $stmt->fetchAll();}
+
+    /**
+     * Release a transfer that passed all four OTP stages: posts the ledger
+     * entries, completes the transaction and notifies the customer.
+     * Must be called inside an open database transaction.
+     */
+    private function releaseApprovedTransferLocked(int $transactionId,int $adminId):void
+    {
+        $stmt=$this->db->prepare('SELECT * FROM transactions WHERE id=? FOR UPDATE');$stmt->execute([$transactionId]);$tx=$stmt->fetch();
+        if(!$tx)throw new RuntimeException('Transfer transaction not found.');
+        if($tx['status']==='completed')return; // already released (idempotent)
+        if($tx['status']!=='awaiting_approval')throw new RuntimeException('Transfer is not awaiting approval. Current status: '.$tx['status']);
+        $stmt=$this->db->prepare('SELECT from_account_id,to_account_id FROM pending_transfers WHERE transaction_id=? FOR UPDATE');$stmt->execute([$transactionId]);
+        $map=$stmt->fetch();
+        if(!$map)throw new RuntimeException('Transfer details not found for release.');
+        $fromId=(int)$map['from_account_id'];$toId=(int)$map['to_account_id'];
+        $ids=[$fromId,$toId];sort($ids,SORT_NUMERIC);$locked=[];
+        foreach($ids as $id){
+            $q=$this->db->prepare('SELECT a.*,at.currency FROM accounts a JOIN account_types at ON at.id=a.account_type_id WHERE a.id=? FOR UPDATE');$q->execute([$id]);
+            $a=$q->fetch();if(!$a)throw new RuntimeException('Account not found: '.$id);
+            if($a['status']!=='active')throw new RuntimeException('All affected accounts must be active.');
+            $locked[$id]=$a;
+        }
+        $from=$locked[$fromId];$to=$locked[$toId];
+        if($from['currency']!==$to['currency']||$tx['currency']!==$from['currency'])throw new RuntimeException('Currency mismatch at release time.');
+        $balance=$this->ledgerBalance($fromId);
+        if((float)$balance<(float)$tx['amount'])throw new RuntimeException('Insufficient funds at release time. Available: '.number_format((float)$balance,2));
+        $this->db->prepare('INSERT INTO ledger_entries(transaction_id,account_id,entry_type,amount) VALUES(?,?,?,?)')->execute([$transactionId,$fromId,'debit',$tx['amount']]);
+        $this->db->prepare('INSERT INTO ledger_entries(transaction_id,account_id,entry_type,amount) VALUES(?,?,?,?)')->execute([$transactionId,$toId,'credit',$tx['amount']]);
+        $this->db->prepare('UPDATE transactions SET status="completed",completed_at=CURRENT_TIMESTAMP WHERE id=?')->execute([$transactionId]);
+        foreach($ids as $id)$this->db->prepare('UPDATE accounts SET available_balance=? WHERE id=?')->execute([$this->ledgerBalance($id),$id]);
+        $this->recordEventById($transactionId,'transfer_released','awaiting_approval','completed',$adminId,'Transfer released by admin approval');
+        $this->audit($adminId,'transfer_released','transaction',$transactionId,['reference'=>$tx['reference']]);
+        if($tx['initiated_by']){(new NotifyingTransferService($this->db))->notifyApproved((string)$tx['reference'],(int)$tx['initiated_by']);}
+    }
+
+    /**
+     * Reject a transfer awaiting admin approval: fails the transaction and
+     * notifies the customer. Must be called inside an open database transaction.
+     */
+    private function rejectApprovedTransferLocked(int $transactionId,int $adminId,string $reason):void
+    {
+        $stmt=$this->db->prepare('SELECT * FROM transactions WHERE id=? FOR UPDATE');$stmt->execute([$transactionId]);$tx=$stmt->fetch();
+        if(!$tx)return;
+        if($tx['status']!=='awaiting_approval')return; // nothing to reject
+        $this->db->prepare('UPDATE transactions SET status="failed",failure_reason=? WHERE id=?')->execute(['Rejected by admin: '.mb_substr($reason,0,200),$transactionId]);
+        $this->recordEventById($transactionId,'transfer_rejected','awaiting_approval','failed',$adminId,$reason);
+        $this->audit($adminId,'transfer_rejected','transaction',$transactionId,['reference'=>$tx['reference'],'reason'=>$reason]);
+        if($tx['initiated_by']){(new NotifyingTransferService($this->db))->notifyRejected((string)$tx['reference'],(int)$tx['initiated_by']);}
+    }
+
+    private function ledgerBalance(int $accountId):string
+    {
+        $stmt=$this->db->prepare('SELECT COALESCE(SUM(CASE WHEN le.entry_type="credit" THEN le.amount ELSE -le.amount END),0) FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? AND t.status="completed"');$stmt->execute([$accountId]);
+        return number_format((float)$stmt->fetchColumn(),4,'.','');
+    }
 
     private function requestAction(string $action,string $entityType,int $entityId,int $adminId,string $reason):int{$reason=trim($reason);if($reason==='')throw new InvalidArgumentException('A reason is required.');$stmt=$this->db->prepare('INSERT INTO admin_action_requests(action_type,entity_type,entity_id,requested_by,reason) VALUES(?,?,?,?,?)');$stmt->execute([$action,$entityType,$entityId,$adminId,$reason]);$id=(int)$this->db->lastInsertId();$this->audit($adminId,'admin_action_requested','admin_action_request',$id,['action_type'=>$action,'entity_id'=>$entityId,'reason'=>$reason]);return $id;}
     private function transactionId(string $reference):int{$stmt=$this->db->prepare('SELECT id FROM transactions WHERE reference=?');$stmt->execute([$reference]);$id=$stmt->fetchColumn();if(!$id)throw new RuntimeException('Transaction not found.');return (int)$id;}

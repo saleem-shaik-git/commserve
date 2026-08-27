@@ -99,6 +99,14 @@ A simulated online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and B
 - Simulated receive, PIN-verified send, cross-asset conversion
 - Separate `crypto_*` ledger (sandboxed from the fiat ledger by design)
 
+### Phase 12 — 4-Stage OTP Transfers with Admin Approval
+- Transfers require **four sequential OTP stages**: Identity → Amount → Beneficiary → Final authorization
+- Each stage issues a fresh 6-digit OTP (hashed, 10-minute expiry, 5 attempts per stage); a stage stepper tracks progress on the confirmation page
+- After stage 4 the transaction becomes `awaiting_approval` and an approval request is raised automatically
+- Admins release or reject transfers from **Admin → Approvals** (release posts the ledger entries atomically with account locking and re-validated balances; rejection fails the transaction with a reason)
+- Customers are notified at each decision point (`transfer_pending_approval`, `transfer_completed`, `transfer_rejected`)
+- Ledger entries only post on admin release — funds never move on OTP verification alone
+
 ## Setup
 
 1. Copy `.env.example` to `.env` and configure MySQL.
