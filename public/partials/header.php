@@ -5,7 +5,7 @@ if (!isset($user)) $user = auth_user();
 $chat_unread = 0;
 try {
     $dbChat = Database::connection();
-    require_once dirname(__DIR__) . '/app/Services/ChatService.php';
+    require_once dirname(__DIR__, 2) . '/app/Services/ChatService.php';
     $chat_unread = (new ChatService($dbChat))->unreadForCustomer((int)$user['id']);
 } catch (Throwable $e) { $chat_unread = 0; }
 ?>
