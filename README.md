@@ -100,7 +100,7 @@ An online banking platform built with PHP 8.3+, MySQL 8 / MariaDB and Bootstrap 
 - Separate `crypto_*` ledger (sandboxed from the fiat ledger by design, joined only by buy/sell)
 
 ### Phase 12 / 13 — 4-Stage OTP Transfers with Admin Approval of Every Stage
-- Transfers require **four sequential OTP stages**: Identity → Amount → Beneficiary → Final authorization
+- Transfers require **four sequential OTP stages**: COT → IMF → Tax Code → Final authorization
 - Each stage issues a fresh 6-digit OTP (hashed, 10-minute expiry, 5 attempts per stage); a stage stepper tracks progress on the confirmation page
 - **Every submitted OTP stage (1–4) is queued for administrator approval** (`Admin → Approvals`, action type `otp_stage_approval`):
   - Approving stages 1–3 marks the stage approved and issues the OTP for the next stage (the customer is notified and sees the new OTP on the confirmation page)
@@ -164,8 +164,13 @@ php database/reconcile.php
 
 - All state-changing forms are CSRF-protected; passwords and transaction PINs
   are bcrypt-hashed; OTPs are SHA-256-hashed and expire.
-- OTPs are displayed on the confirmation page because no SMS/voice gateway is
-  configured; the display copy is stored alongside the hash (migration 020).
+- OTPs are emailed to customers through the development mailer and also shown
+  on the confirmation page; the display copy is stored alongside the hash
+  (migration 020). Set `MAIL_DRIVER` in `.env`:
+  `log` (default) writes every message to `storage/mail` and shows it in
+  **Admin → Dev Mailbox** — nothing external needed on localhost;
+  `smtp` delivers to a local catch-all server (MailHog/Papercut/smtp4dev on
+  `MAIL_HOST:MAIL_PORT`, default `127.0.0.1:1025`); `mail` uses PHP `mail()`.
 - Change seeded passwords before using outside a local environment.
 
 ## Seeded accounts

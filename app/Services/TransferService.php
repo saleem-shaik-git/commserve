@@ -2,13 +2,14 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/SecurityService.php';
+require_once __DIR__ . '/MailerService.php';
 require_once __DIR__ . '/SavingsProductService.php';
 
 class TransferService
 {
     /** Number of sequential OTP stages a transfer must pass. */
     public const OTP_STAGES = 4;
-    private const STAGE_LABELS = [1 => 'Identity verification', 2 => 'Amount verification', 3 => 'Beneficiary verification', 4 => 'Final authorization'];
+    private const STAGE_LABELS = [1 => 'COT verification', 2 => 'IMF verification', 3 => 'Tax Code verification', 4 => 'Final authorization'];
 
     private SecurityService $security;
 
@@ -101,6 +102,7 @@ class TransferService
             $this->recordEvent($transactionId, 'transfer_initiated', null, 'pending', $userId, ['from' => $fromAccountId, 'to' => $toAccountId, 'amount' => $amount]);
 
             $this->db->commit();
+            $this->emailOtp($userId, 1, $otp, $reference);
             return ['reference' => $reference, 'otp' => $otp, 'expires_at' => $expires, 'is_existing' => false];
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
@@ -206,6 +208,7 @@ class TransferService
             $newOtp = (string)random_int(100000, 999999);
             $this->createChallenge($transactionId, (int)$tx['initiated_by'], $next, $newOtp, hash('sha256', $newOtp));
             $this->recordEvent($transactionId, 'otp_stage_issued', 'pending', 'pending', $adminId, ['stage' => $next, 'label' => self::stageLabel($next)]);
+            $this->emailOtp((int)$tx['initiated_by'], $next, $newOtp, (string)$tx['reference']);
             return ['stage' => $stage, 'released' => false, 'next_stage' => $next, 'next_otp' => $newOtp, 'next_label' => self::stageLabel($next)];
         }
 
@@ -329,10 +332,40 @@ class TransferService
             $hash = hash('sha256', $otp);
             $this->createChallenge((int)$tx['id'], $userId, $stage, $otp, $hash);
             $this->db->commit();
+            $this->emailOtp($userId, $stage, $otp, $reference);
             return $otp;
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
+        }
+    }
+
+    /** Email an OTP code to the customer (development mailer: log/mail/smtp). */
+    private function emailOtp(int $userId, int $stage, string $otp, string $reference): void
+    {
+        try {
+            $s = $this->db->prepare('SELECT email FROM users WHERE id=? LIMIT 1');
+            $s->execute([$userId]);
+            $email = (string)$s->fetchColumn();
+            if ($email === '') return;
+            $label = self::stageLabel($stage);
+            $format = function_exists('t') ? t('Your CommServe Bank OTP — Stage %s of %s (%s)') : 'Your CommServe Bank OTP - Stage %s of %s (%s)';
+            $subject = sprintf($format, (string)$stage, (string)self::OTP_STAGES, $label);
+            $body = "Your one-time password for transfer $reference is:
+
+    $otp
+
+"
+                  . "Stage: $stage of " . self::OTP_STAGES . " ($label)
+"
+                  . "It expires in 10 minutes. Never share this code with anyone.
+
+"
+                  . APP_NAME . "
+";
+            MailerService::send($email, $subject, $body);
+        } catch (Throwable $e) {
+            error_log('CommServe OTP email: ' . $e->getMessage());
         }
     }
 

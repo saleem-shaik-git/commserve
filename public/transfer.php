@@ -101,7 +101,7 @@ require __DIR__ . '/partials/sidebar.php';
                 <div class="col-md-6"><label class="form-label"><?=e(t('Transaction PIN'))?></label><input name="transaction_pin" type="password" class="form-control" inputmode="numeric" pattern="\d{4,6}" maxlength="6" placeholder="4-6 digits" required></div>
                 <div class="col-12"><label class="form-label"><?=e(t('Description'))?></label><input name="description" class="form-control" maxlength="255" placeholder="<?=e(t('e.g. Savings to Current'))?>"></div>
                 <div class="col-12"><label class="form-label"><?=e(t('Idempotency Key'))?> <span class="text-muted"><?=e(t('(optional, auto-generated)'))?></span></label><input name="idempotency_key" class="form-control" minlength="8" maxlength="100" placeholder="<?=e(t('Unique key for safe retry'))?>"></div>
-                <div class="col-12"><div class="alert alert-info small mb-0"><i class="bi bi-info-circle me-2"></i><?=e(t('Each transfer passes 4 OTP stages (Identity → Amount → Beneficiary → Final). Every submitted OTP is approved by an administrator — the 4th approval releases the funds. PIN is verified now, OTPs next.'))?></div></div>
+                <div class="col-12"><div class="alert alert-info small mb-0"><i class="bi bi-info-circle me-2"></i><?=e(t('Each transfer passes 4 OTP stages (COT → IMF → Tax Code → Final). Every submitted OTP is approved by an administrator — the 4th approval releases the funds. PIN is verified now, OTPs next.'))?></div></div>
                 <div class="col-12"><button class="btn btn-primary w-100 py-2"><i class="bi bi-shield-lock me-2"></i><?=e(t('Continue to OTP Confirmation'))?></button></div>
               </div>
             </form>
@@ -154,7 +154,7 @@ require __DIR__ . '/partials/sidebar.php';
         <h6 class="fw-bold"><i class="bi bi-shield-check me-2"></i><?=e(t('How transfers work'))?></h6>
         <div class="timeline mt-3">
           <div class="timeline-item"><div class="timeline-dot"></div><strong>1. <?=e(t('Initiate'))?></strong><div class="small text-muted"><?=e(t('Choose accounts, enter amount, verify Transaction PIN'))?></div></div>
-          <div class="timeline-item"><div class="timeline-dot"></div><strong>2. <?=e(t('Four OTP stages'))?></strong><div class="small text-muted"><?=e(t('Identity → Amount → Beneficiary → Final authorization. A fresh 6-digit OTP per stage (shown on screen), 10 min each.'))?></div></div>
+          <div class="timeline-item"><div class="timeline-dot"></div><strong>2. <?=e(t('Four OTP stages'))?></strong><div class="small text-muted"><?=e(t('COT → IMF → Tax Code → Final authorization. A fresh 6-digit OTP per stage (sent to your email), 10 min each.'))?></div></div>
           <div class="timeline-item"><div class="timeline-dot"></div><strong>3. <?=e(t('Admin approval'))?></strong><div class="small text-muted"><?=e(t('Every submitted OTP stage is approved by an administrator. Approving stage 4 releases the transfer and posts the ledger entries.'))?></div></div>
           <div class="timeline-item"><div class="timeline-dot"></div><strong>4. <?=e(t('Receipt'))?></strong><div class="small text-muted"><?=e(t('Get transfer receipt with reference once released. Download or share.'))?></div></div>
         </div>
