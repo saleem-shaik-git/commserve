@@ -40,6 +40,8 @@ final class StatementService
 
     public function getOpeningBalance(int $accountId, ?string $fromDate): float
     {
+        // No start date = statement begins at account inception (balance 0
+        // before the first ledger entry), so 0.0 is correct by definition.
         if (!$fromDate) return 0.0;
         $stmt = $this->db->prepare('SELECT COALESCE(SUM(CASE WHEN le.entry_type="credit" THEN le.amount ELSE -le.amount END),0) FROM ledger_entries le JOIN transactions t ON t.id=le.transaction_id WHERE le.account_id=? AND t.status="completed" AND DATE(t.created_at) < ?');
         $stmt->execute([$accountId, $fromDate]);

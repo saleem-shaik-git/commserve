@@ -28,8 +28,9 @@ final class MigrationRunner
             $existing = $stmt->fetchColumn();
             if ($existing !== false) {
                 if (!hash_equals((string)$existing, $checksum)) {
-                    // Allow repaired Phase 5 files to replace a never-completed / failed apply.
-                    if (!in_array($version, ['005_payments_beneficiaries', '006_phase5_payment_hardening'], true)) {
+                    // Allow repaired files to replace a never-completed / failed apply
+                    // (Phase 5 repairs; 010 rewritten for MySQL 8 portability).
+                    if (!in_array($version, ['005_payments_beneficiaries', '006_phase5_payment_hardening', '010_phase8_notifications_schema_repair'], true)) {
                         throw new RuntimeException('Migration checksum changed: ' . $version);
                     }
                     $this->db->prepare('DELETE FROM schema_migrations WHERE version=?')->execute([$version]);

@@ -9,7 +9,7 @@ $transferService = new TransferService($db);
 $accountService = new AccountService($db);
 
 $ref = trim($_GET['ref'] ?? '');
-if ($ref === '') redirect('/commserve/public/transactions.php');
+if ($ref === '') redirect(url('transactions.php'));
 
 try {
     $details = $transferService->getDetails($ref, (int)$user['id']);
@@ -29,7 +29,7 @@ require __DIR__ . '/partials/sidebar.php';
   <div class="col-lg-8">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h3 class="fw-bold mb-0"><i class="bi bi-receipt me-2"></i>Transfer Receipt</h3>
-      <a href="/commserve/public/transactions.php" class="btn btn-outline-secondary btn-sm">Back to transactions</a>
+      <a href="<?=url('transactions.php')?>" class="btn btn-outline-secondary btn-sm">Back to transactions</a>
     </div>
 
     <?php if (empty($details)): ?>
@@ -41,7 +41,8 @@ require __DIR__ . '/partials/sidebar.php';
             <div class="brand-mark mx-auto mb-3" style="width:48px;height:48px">C</div>
             <h4 class="fw-bold">CommServe Demo Bank</h4>
             <div class="small text-muted">Transfer Receipt — Simulation Only</div>
-            <div class="mt-3"><span class="badge <?= $details['status']==='completed'?'text-bg-success':'text-bg-warning' ?> fs-6"><?= e(strtoupper($details['status'])) ?></span></div>
+            <div class="mt-3"><span class="badge <?= $details['status']==='completed'?'text-bg-success':($details['status']==='awaiting_approval'?'text-bg-info':'text-bg-warning') ?> fs-6"><?= e(strtoupper($details['status'])) ?></span></div>
+            <?php if($details['status']==='awaiting_approval'): ?><div class="alert alert-info mt-3 mb-0"><i class="bi bi-person-check me-2"></i>All 4 OTP stages verified — this transfer is queued for admin release. Funds move once an administrator approves it.</div><?php endif; ?>
           </div>
 
           <div class="text-center mb-4">
@@ -72,7 +73,7 @@ require __DIR__ . '/partials/sidebar.php';
             <dt class="col-5 text-muted">Description</dt><dd class="col-7"><?= e($details['description']) ?></dd>
             <dt class="col-5 text-muted">Initiated</dt><dd class="col-7"><?= e($details['created_at']) ?></dd>
             <dt class="col-5 text-muted">Completed</dt><dd class="col-7"><?= e($details['completed_at'] ?? $details['created_at']) ?></dd>
-            <dt class="col-5 text-muted">Status</dt><dd class="col-7"><span class="badge text-bg-success"><?= e($details['status']) ?></span></dd>
+            <dt class="col-5 text-muted">Status</dt><dd class="col-7"><span class="badge <?= $details['status']==='completed'?'text-bg-success':($details['status']==='awaiting_approval'?'text-bg-info':'text-bg-warning') ?>"><?= e($details['status']) ?></span></dd>
             <dt class="col-5 text-muted">Initiated By</dt><dd class="col-7"><?= e($user['name']) ?> (<?= e($user['email']) ?>)</dd>
           </dl>
 
@@ -91,8 +92,8 @@ require __DIR__ . '/partials/sidebar.php';
 
       <div class="d-flex gap-2 mt-4">
         <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer me-2"></i>Print Receipt</button>
-        <a href="/commserve/public/transaction.php?ref=<?= urlencode($details['reference']) ?>" class="btn btn-outline-secondary"><i class="bi bi-eye me-2"></i>View Transaction</a>
-        <a href="/commserve/public/transfer.php" class="btn btn-outline-secondary"><i class="bi bi-send me-2"></i>New Transfer</a>
+        <a href="<?=url('transaction.php')?>?ref=<?= urlencode($details['reference']) ?>" class="btn btn-outline-secondary"><i class="bi bi-eye me-2"></i>View Transaction</a>
+        <a href="<?=url('transfer.php')?>" class="btn btn-outline-secondary"><i class="bi bi-send me-2"></i>New Transfer</a>
       </div>
 
       <?php if (!empty($details['events'])): ?>

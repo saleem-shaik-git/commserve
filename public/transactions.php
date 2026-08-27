@@ -52,8 +52,8 @@ require __DIR__ . '/partials/sidebar.php';
     <p class="text-muted mb-0">Ledger-backed history — filter by account, type, date, search.</p>
   </div>
   <div class="d-flex gap-2">
-    <a href="/commserve/public/statements.php?account=<?= $accountId ?>" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Statement</a>
-    <a href="/commserve/public/transfer.php" class="btn btn-primary btn-sm"><i class="bi bi-send me-1"></i>New Transfer</a>
+    <a href="<?=url('statements.php')?>?account=<?= $accountId ?>" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Statement</a>
+    <a href="<?=url('transfer.php')?>" class="btn btn-primary btn-sm"><i class="bi bi-send me-1"></i>New Transfer</a>
   </div>
 </div>
 
@@ -82,7 +82,7 @@ require __DIR__ . '/partials/sidebar.php';
           <?php else: foreach ($rows as $r): ?>
             <tr>
               <td class="small"><?= e(date('M d, Y', strtotime($r['created_at']))) ?><br><span class="text-muted"><?= e(date('H:i', strtotime($r['created_at']))) ?></span></td>
-              <td><a href="/commserve/public/transaction.php?ref=<?= urlencode($r['reference']) ?>" class="fw-semibold text-decoration-none small"><?= e($r['reference']) ?></a></td>
+              <td><a href="<?=url('transaction.php')?>?ref=<?= urlencode($r['reference']) ?>" class="fw-semibold text-decoration-none small"><?= e($r['reference']) ?></a></td>
               <td class="small"><?= e(ucfirst($r['type'])) ?></td>
               <td class="small" style="max-width:200px"><?= e($r['description']) ?></td>
               <td><span class="badge <?= $r['entry_type']==='credit'?'text-bg-success':'text-bg-danger' ?>"><?= e(ucfirst($r['entry_type'])) ?></span></td>
@@ -105,7 +105,7 @@ require __DIR__ . '/partials/sidebar.php';
           <div class="border rounded p-2 mb-2 small">
             <div class="d-flex justify-content-between"><span class="fw-semibold"><?= e($p['reference']) ?></span><span class="badge text-bg-warning"><?= e($p['status']) ?></span></div>
             <div class="text-muted">$<?= number_format((float)$p['amount'],2) ?> · <?= e($p['description']??'') ?></div>
-            <a href="/commserve/public/transfer-confirm.php?ref=<?= urlencode($p['reference']) ?>" class="btn btn-sm btn-primary w-100 mt-2">Confirm OTP</a>
+            <a href="<?=url('transfer-confirm.php')?>?ref=<?= urlencode($p['reference']) ?>" class="btn btn-sm btn-primary w-100 mt-2">Confirm OTP</a>
           </div>
         <?php endforeach; endif; ?>
       </div>
