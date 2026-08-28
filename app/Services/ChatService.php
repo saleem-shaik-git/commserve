@@ -10,30 +10,27 @@ final class ChatService
 {
     public function __construct(private PDO $db) {}
 
-    /** Open a new thread with the first message. Returns the thread id. */
-    public function openThread(int $userId, string $subject, string $body): int
+    /**
+     * Every customer has exactly ONE conversation with the admin team.
+     * Returns its id, creating the thread on first contact.
+     */
+    public function ensureThread(int $userId): int
     {
-        $subject = mb_substr(trim($subject), 0, 200);
-        $body = trim($body);
-        if ($body === '') throw new InvalidArgumentException('Message is required.');
-        $this->db->beginTransaction();
-        try {
-            $this->db->prepare('INSERT INTO chat_threads(user_id,subject,status,last_message_at) VALUES(?,?,"open",CURRENT_TIMESTAMP)')->execute([$userId, $subject]);
-            $threadId = (int)$this->db->lastInsertId();
-            $this->db->prepare('INSERT INTO chat_messages(thread_id,sender_user_id,sender_role,body,read_by_customer,read_by_admin) VALUES(?,?,?, ?,1,0)')
-                ->execute([$threadId, $userId, 'customer', $body]);
-            $this->db->commit();
-            return $threadId;
-        } catch (Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
-            throw $e;
-        }
+        $stmt = $this->db->prepare('SELECT id FROM chat_threads WHERE user_id=? LIMIT 1');
+        $stmt->execute([$userId]);
+        $id = $stmt->fetchColumn();
+        if ($id) return (int)$id;
+        $this->db->prepare('INSERT INTO chat_threads(user_id,subject,status,last_message_at) VALUES (?,\'\',\'open\',CURRENT_TIMESTAMP)')->execute([$userId]);
+        return (int)$this->db->lastInsertId();
     }
 
-    public function sendCustomer(int $userId, int $threadId, string $body): int
+    public function sendCustomer(int $userId, string $body): int
     {
-        $this->assertThread($threadId, $userId);
-        return $this->insert($threadId, $userId, 'customer', $body);
+        $threadId = $this->ensureThread($userId);
+        $id = $this->insert($threadId, $userId, 'customer', $body);
+        // A customer reply always reopens the conversation with the team.
+        $this->db->prepare('UPDATE chat_threads SET status="open" WHERE id=? AND status="closed"')->execute([$threadId]);
+        return $id;
     }
 
     public function sendAdmin(int $adminId, int $threadId, string $body): int
@@ -63,14 +60,6 @@ final class ChatService
         $stmt = $this->db->prepare('SELECT t.*,u.email,u.first_name,u.last_name,(SELECT body FROM chat_messages m WHERE m.thread_id=t.id ORDER BY m.id DESC LIMIT 1) last_message FROM chat_threads t LEFT JOIN users u ON u.id=t.user_id WHERE t.id=? LIMIT 1');
         $stmt->execute([$threadId]);
         return $stmt->fetch() ?: null;
-    }
-
-    /** Customer-visible threads (own only). */
-    public function threadsForUser(int $userId): array
-    {
-        $stmt = $this->db->prepare('SELECT t.*,(SELECT body FROM chat_messages m WHERE m.thread_id=t.id ORDER BY m.id DESC LIMIT 1) last_message,(SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id AND m.sender_role="admin" AND m.read_by_customer=0) unread FROM chat_threads t WHERE t.user_id=? ORDER BY t.last_message_at DESC');
-        $stmt->execute([$userId]);
-        return $stmt->fetchAll();
     }
 
     /** All threads for the admin console. */

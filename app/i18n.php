@@ -456,7 +456,6 @@ function translations(): array
         'Crypto sale' => 'Crypto sale',
         'Estimated' => 'Estimated',
         'Fiat account' => 'Fiat account',
-        'How can we help you?' => 'How can we help you?',
         'Live' => 'Live',
         'Live Chat' => 'Live Chat',
         'Live rate' => 'Live rate',
@@ -476,15 +475,11 @@ function translations(): array
         'Sell' => 'Sell',
         'Sell Crypto' => 'Sell Crypto',
         'Send' => 'Send',
-        'Start a new conversation' => 'Start a new conversation',
-        'Start conversation' => 'Start conversation',
-        'Subject' => 'Subject',
         'Support Team' => 'Support Team',
         'This conversation is closed. Reopen it to continue.' => 'This conversation is closed. Reopen it to continue.',
         'Trade Crypto' => 'Trade Crypto',
         'Type your message…' => 'Type your message…',
         'available' => 'available',
-        'our team replies here in real time.' => 'our team replies here in real time.',
         'Funds available for transfers and card transactions' => 'Funds available for transfers and card transactions',
         // --- Phase 16: retail banking products ---
         'Account age' => 'Account age',
@@ -673,7 +668,6 @@ function translations(): array
         'Messages are delivered by the configured driver; switch MAIL_DRIVER=log in .env to capture them here.' => 'Messages are delivered by the configured driver; switch MAIL_DRIVER=log in .env to capture them here.',
         'No messages yet.' => 'No messages yet.',
         'Refresh' => 'Refresh',
-        'Subject' => 'Subject',
         'Tax Code' => 'Tax Code',
         'Tax Code verification' => 'Tax Code verification',
         'To' => 'To',
@@ -776,6 +770,12 @@ function translations(): array
         'Up to %s%% p.a.' => 'Up to %s%% p.a.',
         'Virtual & debit cards' => 'Virtual & debit cards',
         'savings products to choose from' => 'savings products to choose from',
+        // --- Unique per-customer chat ---
+        'Every customer has one shared conversation — all administrators see and can reply to every thread.' => 'Every customer has one shared conversation — all administrators see and can reply to every thread.',
+        'Our whole team sees this conversation — any administrator can reply.' => 'Our whole team sees this conversation — any administrator can reply.',
+        'Replies arrive here in real time.' => 'Replies arrive here in real time.',
+        'Say hello — your message starts your conversation with our team.' => 'Say hello — your message starts your conversation with our team.',
+        'This conversation is closed — sending a message reopens it.' => 'This conversation is closed — sending a message reopens it.',
     ];
 
     $es = [
@@ -1196,7 +1196,6 @@ function translations(): array
         'Crypto sale' => 'Venta de cripto',
         'Estimated' => 'Estimado',
         'Fiat account' => 'Cuenta fiat',
-        'How can we help you?' => '¿En qué podemos ayudarle?',
         'Live' => 'En vivo',
         'Live Chat' => 'Chat en vivo',
         'Live rate' => 'Tasa en vivo',
@@ -1216,15 +1215,11 @@ function translations(): array
         'Sell' => 'Vender',
         'Sell Crypto' => 'Vender cripto',
         'Send' => 'Enviar',
-        'Start a new conversation' => 'Iniciar una nueva conversación',
-        'Start conversation' => 'Iniciar conversación',
-        'Subject' => 'Asunto',
         'Support Team' => 'Equipo de soporte',
         'This conversation is closed. Reopen it to continue.' => 'Esta conversación está cerrada. Reábrela para continuar.',
         'Trade Crypto' => 'Operar cripto',
         'Type your message…' => 'Escriba su mensaje…',
         'available' => 'disponible',
-        'our team replies here in real time.' => 'nuestro equipo responde aquí en tiempo real.',
         'Funds available for transfers and card transactions' => 'Fondos disponibles para transferencias y pagos con tarjeta',
         // --- Phase 16: retail banking products ---
         'Account age' => 'Antigüedad de cuenta',
@@ -1413,7 +1408,6 @@ function translations(): array
         'Messages are delivered by the configured driver; switch MAIL_DRIVER=log in .env to capture them here.' => 'Los mensajes se entregan mediante el driver configurado; use MAIL_DRIVER=log en .env para capturarlos aquí.',
         'No messages yet.' => 'Aún no hay mensajes.',
         'Refresh' => 'Actualizar',
-        'Subject' => 'Asunto',
         'Tax Code' => 'Código fiscal',
         'Tax Code verification' => 'Verificación de código fiscal',
         'To' => 'Para',
@@ -1516,6 +1510,12 @@ function translations(): array
         'Up to %s%% p.a.' => 'Hasta %s%% p.a.',
         'Virtual & debit cards' => 'Tarjetas virtuales y de débito',
         'savings products to choose from' => 'productos de ahorro para elegir',
+        // --- Unique per-customer chat ---
+        'Every customer has one shared conversation — all administrators see and can reply to every thread.' => 'Cada cliente tiene una conversación compartida: todos los administradores ven y pueden responder en cada hilo.',
+        'Our whole team sees this conversation — any administrator can reply.' => 'Todo nuestro equipo ve esta conversación: cualquier administrador puede responder.',
+        'Replies arrive here in real time.' => 'Las respuestas llegan aquí en tiempo real.',
+        'Say hello — your message starts your conversation with our team.' => 'Salude: su mensaje inicia la conversación con nuestro equipo.',
+        'This conversation is closed — sending a message reopens it.' => 'Esta conversación está cerrada: enviar un mensaje la reabre.',
     ];
 
     $fr = [
@@ -1942,7 +1942,6 @@ function translations(): array
         'Crypto sale' => 'Vente de crypto',
         'Estimated' => 'Estimation',
         'Fiat account' => 'Compte fiat',
-        'How can we help you?' => 'Comment pouvons-nous vous aider ?',
         'Live' => 'Direct',
         'Live Chat' => 'Chat en direct',
         'Live rate' => 'Taux en direct',
@@ -1962,15 +1961,11 @@ function translations(): array
         'Sell' => 'Vendre',
         'Sell Crypto' => 'Vendre de la crypto',
         'Send' => 'Envoyer',
-        'Start a new conversation' => 'Démarrer une nouvelle conversation',
-        'Start conversation' => 'Démarrer la conversation',
-        'Subject' => 'Objet',
         'Support Team' => 'Équipe support',
         'This conversation is closed. Reopen it to continue.' => 'Cette conversation est fermée. Rouvrez-la pour continuer.',
         'Trade Crypto' => 'Négocier la crypto',
         'Type your message…' => 'Écrivez votre message…',
         'available' => 'disponible',
-        'our team replies here in real time.' => 'notre équipe répond ici en temps réel.',
         'Funds available for transfers and card transactions' => 'Fonds disponibles pour les virements et paiements par carte',
         // --- Phase 16: retail banking products ---
         'Account age' => 'Ancienneté du compte',
@@ -2159,7 +2154,6 @@ function translations(): array
         'Messages are delivered by the configured driver; switch MAIL_DRIVER=log in .env to capture them here.' => 'Les messages sont livrés par le pilote configuré ; mettez MAIL_DRIVER=log dans .env pour les capturer ici.',
         'No messages yet.' => 'Aucun message pour le moment.',
         'Refresh' => 'Actualiser',
-        'Subject' => 'Objet',
         'Tax Code' => 'Code fiscal',
         'Tax Code verification' => 'Vérification du code fiscal',
         'To' => 'À',
@@ -2262,6 +2256,12 @@ function translations(): array
         'Up to %s%% p.a.' => 'Jusqu’à %s%% p.a.',
         'Virtual & debit cards' => 'Cartes virtuelles et débit',
         'savings products to choose from' => 'produits d’épargne au choix',
+        // --- Unique per-customer chat ---
+        'Every customer has one shared conversation — all administrators see and can reply to every thread.' => 'Chaque client a une conversation partagée — tous les administrateurs voient et peuvent répondre à chaque fil.',
+        'Our whole team sees this conversation — any administrator can reply.' => 'Toute notre équipe voit cette conversation — n’importe quel administrateur peut répondre.',
+        'Replies arrive here in real time.' => 'Les réponses arrivent ici en temps réel.',
+        'Say hello — your message starts your conversation with our team.' => 'Dites bonjour — votre message démarre la conversation avec notre équipe.',
+        'This conversation is closed — sending a message reopens it.' => 'Cette conversation est fermée — envoyer un message la rouvre.',
     ];
 
     $d = [

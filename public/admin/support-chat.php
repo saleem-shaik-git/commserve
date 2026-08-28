@@ -17,7 +17,7 @@ if (($_GET['ajax'] ?? '') === '1') {
         $out = [];
         foreach ($rows as $m) {
             $out[] = ['id' => (int)$m['id'], 'role' => (string)$m['sender_role'],
-                      'name' => $m['sender_role'] === 'admin' ? t('Support Team') : trim(($m['first_name'] ?? '') . ' ' . ($m['last_name'] ?? '')),
+                      'name' => trim(($m['first_name'] ?? '') . ' ' . ($m['last_name'] ?? '')),
                       'body' => (string)$m['body'], 'at' => (string)$m['created_at']];
         }
         echo json_encode(['ok' => true, 'messages' => $out], JSON_THROW_ON_ERROR);
@@ -61,7 +61,7 @@ require __DIR__ . '/partials/header.php';
   <?php if ($success): ?><div class="alert alert-success"><?=e($success)?></div><?php endif; ?>
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h2 class="fw-bold mb-0"><i class="bi bi-headset me-2"></i><?=e(t('Live Chat'))?></h2>
-    <span class="text-muted small"><?=e(t('Answer customer messages in real time.'))?></span>
+    <span class="text-muted small"><?=e(t('Every customer has one shared conversation — all administrators see and can reply to every thread.'))?></span>
   </div>
   <div class="row g-3">
     <div class="col-lg-4">
@@ -75,7 +75,7 @@ require __DIR__ . '/partials/header.php';
                 <span class="fw-semibold small text-truncate"><?=e($th['first_name'].' '.$th['last_name'])?></span>
                 <?php if ((int)$th['unread'] > 0): ?><span class="badge text-bg-danger"><?=(int)$th['unread']?></span><?php endif; ?>
               </div>
-              <div class="small text-muted text-truncate"><?=e($th['subject'] !== '' ? $th['subject'] : t('Conversation'))?> · <?=e(mb_substr((string)$th['last_message'], 0, 50))?></div>
+              <div class="small text-muted text-truncate"><?=e(mb_substr((string)$th['last_message'], 0, 60))?></div>
               <div class="d-flex justify-content-between align-items-center mt-1">
                 <span class="badge <?=$th['status']==='open'?'text-bg-success':'text-bg-secondary'?>"><?=e(tx_label($th['status']))?></span>
                 <small class="text-muted"><?=e(format_date($th['last_message_at'],'M d, H:i'))?></small>
@@ -93,7 +93,7 @@ require __DIR__ . '/partials/header.php';
         <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div>
             <span class="fw-bold"><?=e($active['first_name'].' '.$active['last_name'])?></span>
-            <span class="text-muted small">· <?=e($active['email'])?> · <?=e($active['subject'] !== '' ? $active['subject'] : t('Conversation'))?></span>
+            <span class="text-muted small">· <?=e($active['email'])?></span>
             <span class="badge ms-1 <?=$active['status']==='open'?'text-bg-success':'text-bg-secondary'?>"><?=e(tx_label($active['status']))?></span>
           </div>
           <form method="post"><?=csrf_field()?>
@@ -107,7 +107,7 @@ require __DIR__ . '/partials/header.php';
           <?php foreach ($messages as $m): ?>
             <div class="chat-row <?= $m['sender_role']==='admin' ? 'chat-me' : 'chat-them' ?>">
               <div class="chat-bubble" data-id="<?=$m['id']?>">
-                <div class="chat-name small fw-semibold"><?=e($m['sender_role']==='admin'?t('Support Team'):trim(($m['first_name']??'').' '.($m['last_name']??'')))?></div>
+                <div class="chat-name small fw-semibold"><?=e(trim(($m['first_name']??'').' '.($m['last_name']??'')))?></div>
                 <div class="chat-body"><?=e($m['body'])?></div>
                 <div class="chat-time small text-muted"><?=e($m['created_at'])?></div>
               </div>
