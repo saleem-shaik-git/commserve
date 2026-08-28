@@ -80,7 +80,7 @@ try {
         <p class="fs-5 text-white-50 mb-4"><?=e(t('Full-service digital banking: savings that earn real ledger-posted interest, fixed deposits, personal loans, cards, crypto and instant transfers — all in one secure app.'))?></p>
         <div class="d-flex gap-2 flex-wrap mb-4">
           <a href="<?=url('register.php')?>" class="btn btn-light btn-lg fw-semibold"><?=e(t('Open your account'))?> <i class="bi bi-arrow-right ms-1"></i></a>
-          <a href="#savings" class="btn btn-outline-light btn-lg"><?=e(t('Compare our accounts'))?></a>
+          <a href="#products" class="btn btn-outline-light btn-lg"><?=e(t('Compare our accounts'))?></a>
         </div>
         <div class="d-flex gap-2 flex-wrap">
           <span class="hero-chip"><i class="bi bi-journal-bookmark me-1"></i><?=e(t('Ledger-backed balances'))?></span>
@@ -93,7 +93,7 @@ try {
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5 class="fw-bold mb-0"><?=e(t('Rates at a glance'))?></h5>
-              <a href="#savings" class="small text-decoration-none"><?=e(t('See all'))?></a>
+              <a href="#products" class="small text-decoration-none"><?=e(t('See all'))?></a>
             </div>
             <?php
             $rateRows = [];
@@ -146,7 +146,7 @@ try {
       $loanMax = $loanProducts ? max(array_map(fn($p) => (float)$p['max_amount'], $loanProducts)) : null;
       $trim = fn($n) => rtrim(rtrim(number_format($n, 3, '.', ''), '0'), '.');
       $widgets = [
-        ['bi-piggy-bank', 'text-bg-success', t('Savings'), $maxSaveRate !== null ? t('Up to %s%% p.a.', null, [$trim($maxSaveRate)]) : null, count($savings) . ' ' . t('savings products to choose from'), '#savings'],
+        ['bi-piggy-bank', 'text-bg-success', t('Savings'), $maxSaveRate !== null ? t('Up to %s%% p.a.', null, [$trim($maxSaveRate)]) : null, count($savings) . ' ' . t('savings products to choose from'), url('register.php')'],
         ['bi-lock', 'text-bg-success', t('Fixed deposits'), $bestTerm ? t('Up to %s%% p.a.', null, [$trim((float)$bestTerm['interest_rate'])]) : null, $bestTerm ? t('Terms up to %s days', null, [(string)(int)$bestTerm['default_term_days']]) : null, '#deposits'],
         ['bi-bank', 'text-bg-primary', t('Loans'), $minLoanRate !== null ? t('From %s%% p.a.', null, [$trim($minLoanRate)]) : null, ($loanMin !== null && $loanMax !== null) ? t('Borrow %s – %s', null, [format_money($loanMin), format_money($loanMax)]) : null, '#loans'],
         ['bi-credit-card', 'text-bg-dark', t('Cards'), t('Virtual & debit cards'), t('Freeze instantly, set limits, pay online and at POS.'), '#digital'],
@@ -173,36 +173,6 @@ try {
     </div>
   </section>
 
-  <!-- SAVINGS PRODUCTS -->
-  <section class="mb-5" id="savings">
-    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
-      <div>
-        <h2 class="fw-bold mb-1"><?=e(t('Savings products'))?></h2>
-        <p class="text-muted mb-0"><?=e(t('Pick the account that fits you — interest is accrued daily and posted straight to your ledger-backed statement.'))?></p>
-      </div>
-    </div>
-    <div class="row g-3">
-      <?php if (!$savings): ?>
-        <div class="col-12"><div class="alert alert-light border"><?=e(t('Product catalogue is being updated — sign up and check back soon.'))?></div></div>
-      <?php endif; ?>
-      <?php foreach ($savings as $p): ?>
-      <div class="col-md-6 col-xl-4">
-        <div class="card product-card border-0 shadow-sm h-100"><div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <h5 class="fw-bold mb-0"><?=e($p['name'])?></h5>
-            <span class="badge text-bg-success rate-badge"><?=e($p['interest_rate'])?>% <?=e(t('p.a.'))?></span>
-          </div>
-          <ul class="list-unstyled small text-muted mb-3">
-            <li><i class="bi bi-check2 text-success me-2"></i><?=e(t('Min. opening'))?>: <b><?=format_money((float)$p['min_opening_balance'])?></b></li>
-            <li><i class="bi bi-check2 text-success me-2"></i><?=e($p['calc_frequency']==='daily'?t('Daily interest'):t('Monthly interest'))?></li>
-            <li><i class="bi bi-check2 text-success me-2"></i><?=e(t('Withdrawals'))?>: <?=e(tx_label($p['withdrawal_restriction']))?></li>
-          </ul>
-          <a href="<?=url('register.php')?>" class="btn btn-outline-primary btn-sm w-100"><?=e(t('Open account'))?></a>
-        </div></div>
-      </div>
-      <?php endforeach; ?>
-    </div>
-  </section>
 
   <!-- FIXED DEPOSITS -->
   <?php if ($terms): ?>
@@ -320,7 +290,7 @@ try {
       <div class="col-6 col-lg-2">
         <div class="text-white fw-semibold mb-2"><?=e(t('Products'))?></div>
         <ul class="list-unstyled small">
-          <li class="mb-1"><a href="#savings" class="text-white-50 text-decoration-none"><?=e(t('Savings'))?></a></li>
+          <li class="mb-1"><a href="#products" class="text-white-50 text-decoration-none"><?=e(t('Savings'))?></a></li>
           <li class="mb-1"><a href="#deposits" class="text-white-50 text-decoration-none"><?=e(t('Fixed deposits'))?></a></li>
           <li class="mb-1"><a href="#loans" class="text-white-50 text-decoration-none"><?=e(t('Loans'))?></a></li>
         </ul>
