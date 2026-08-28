@@ -138,22 +138,60 @@ try {
     </div>
     <div class="row g-3">
       <?php
-      $maxSaveRate = $savings ? max(array_map(fn($p) => (float)$p['interest_rate'], $savings)) : null;
-      $bestTerm = $terms ? $terms[0] : null;
-      foreach ($terms as $tp) { if ((float)$tp['interest_rate'] > (float)$bestTerm['interest_rate']) $bestTerm = $tp; }
-      $minLoanRate = $loanProducts ? min(array_map(fn($p) => (float)$p['annual_rate'], $loanProducts)) : null;
-      $loanMin = $loanProducts ? min(array_map(fn($p) => (float)$p['min_amount'], $loanProducts)) : null;
-      $loanMax = $loanProducts ? max(array_map(fn($p) => (float)$p['max_amount'], $loanProducts)) : null;
-      $trim = fn($n) => rtrim(rtrim(number_format($n, 3, '.', ''), '0'), '.');
-      $widgets = [
-        ['bi-piggy-bank', 'text-bg-success', t('Savings'), $maxSaveRate !== null ? t('Up to %s%% p.a.', null, [$trim($maxSaveRate)]) : null, count($savings) . ' ' . t('savings products to choose from'), url('register.php')'],
-        ['bi-lock', 'text-bg-success', t('Fixed deposits'), $bestTerm ? t('Up to %s%% p.a.', null, [$trim((float)$bestTerm['interest_rate'])]) : null, $bestTerm ? t('Terms up to %s days', null, [(string)(int)$bestTerm['default_term_days']]) : null, '#deposits'],
-        ['bi-bank', 'text-bg-primary', t('Loans'), $minLoanRate !== null ? t('From %s%% p.a.', null, [$trim($minLoanRate)]) : null, ($loanMin !== null && $loanMax !== null) ? t('Borrow %s – %s', null, [format_money($loanMin), format_money($loanMax)]) : null, '#loans'],
-        ['bi-credit-card', 'text-bg-dark', t('Cards'), t('Virtual & debit cards'), t('Freeze instantly, set limits, pay online and at POS.'), '#digital'],
-        ['bi-currency-bitcoin', 'text-bg-warning', t('Crypto wallet'), t('Live rates'), t('BTC, ETH, USDT, USDC, XRP at live market rates.'), '#digital'],
-        ['bi-lightning-charge', 'text-bg-info', t('Bill payments'), t('One-off & recurring'), t('Electricity, internet, airtime and more.'), '#digital'],
-      ];
-      foreach ($widgets as [$wIcon, $wColor, $wTitle, $wStat, $wDesc, $wHref]): ?>
+      // Live stats for the product widgets (plain precomputed values).
+      $maxSaveRate = 0.0;
+      foreach ($savings as $p) { $r = (float)$p['interest_rate']; if ($r > $maxSaveRate) $maxSaveRate = $r; }
+      $bestTerm = null;
+      foreach ($terms as $tp) { if ($bestTerm === null || (float)$tp['interest_rate'] > (float)$bestTerm['interest_rate']) $bestTerm = $tp; }
+      $minLoanRate = null; $loanMin = null; $loanMax = null;
+      foreach ($loanProducts as $lp) {
+          $rate = (float)$lp['annual_rate'];
+          if ($minLoanRate === null || $rate < $minLoanRate) $minLoanRate = $rate;
+          if ($loanMin === null || (float)$lp['min_amount'] < $loanMin) $loanMin = (float)$lp['min_amount'];
+          if ($loanMax === null || (float)$lp['max_amount'] > $loanMax) $loanMax = (float)$lp['max_amount'];
+      }
+      $trim = function (float $n): string { $txt = number_format($n, 3, '.', ''); return rtrim(rtrim($txt, '0'), '.'); };
+
+      $widgets = [];
+      $row = [];
+      $row[] = 'bi-piggy-bank'; $row[] = 'text-bg-success'; $row[] = t('Savings');
+      $row[] = $maxSaveRate > 0 ? t('Up to %s%% p.a.', null, [$trim($maxSaveRate)]) : null;
+      $row[] = count($savings) . ' ' . t('savings products to choose from');
+      $row[] = url('register.php');
+      $widgets[] = $row;
+      $row = [];
+      $row[] = 'bi-lock'; $row[] = 'text-bg-success'; $row[] = t('Fixed deposits');
+      $row[] = $bestTerm !== null ? t('Up to %s%% p.a.', null, [$trim((float)$bestTerm['interest_rate'])]) : null;
+      $row[] = $bestTerm !== null ? t('Terms up to %s days', null, [(string)(int)$bestTerm['default_term_days']]) : null;
+      $row[] = '#deposits';
+      $widgets[] = $row;
+      $row = [];
+      $row[] = 'bi-bank'; $row[] = 'text-bg-primary'; $row[] = t('Loans');
+      $row[] = $minLoanRate !== null ? t('From %s%% p.a.', null, [$trim($minLoanRate)]) : null;
+      $row[] = ($loanMin !== null && $loanMax !== null) ? t('Borrow %s - %s', null, [format_money($loanMin), format_money($loanMax)]) : null;
+      $row[] = '#loans';
+      $widgets[] = $row;
+      $row = [];
+      $row[] = 'bi-credit-card'; $row[] = 'text-bg-dark'; $row[] = t('Cards');
+      $row[] = t('Virtual & debit cards');
+      $row[] = t('Freeze instantly, set limits, pay online and at POS.');
+      $row[] = '#digital';
+      $widgets[] = $row;
+      $row = [];
+      $row[] = 'bi-currency-bitcoin'; $row[] = 'text-bg-warning'; $row[] = t('Crypto wallet');
+      $row[] = t('Live rates');
+      $row[] = t('BTC, ETH, USDT, USDC, XRP at live market rates.');
+      $row[] = '#digital';
+      $widgets[] = $row;
+      $row = [];
+      $row[] = 'bi-lightning-charge'; $row[] = 'text-bg-info'; $row[] = t('Bill payments');
+      $row[] = t('One-off & recurring');
+      $row[] = t('Electricity, internet, airtime and more.');
+      $row[] = '#digital';
+      $widgets[] = $row;
+      foreach ($widgets as $w):
+          $wIcon = $w[0]; $wColor = $w[1]; $wTitle = $w[2]; $wStat = $w[3]; $wDesc = $w[4]; $wHref = $w[5];
+      ?>
       <div class="col-md-6 col-xl-4">
         <a href="<?=$wHref?>" class="text-decoration-none">
           <div class="card product-card border-0 shadow-sm h-100"><div class="card-body p-4">

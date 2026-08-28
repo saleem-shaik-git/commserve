@@ -760,7 +760,7 @@ function translations(): array
         'from' => 'from',
         // --- Product widgets ---
         'BTC, ETH, USDT, USDC, XRP at live market rates.' => 'BTC, ETH, USDT, USDC, XRP at live market rates.',
-        'Borrow %s – %s' => 'Borrow %s – %s',
+        'Borrow %s - %s' => 'Borrow %s – %s',
         'Electricity, internet, airtime and more.' => 'Electricity, internet, airtime and more.',
         'Everything your money needs, in one bank.' => 'Everything your money needs, in one bank.',
         'Explore' => 'Explore',
@@ -1500,7 +1500,7 @@ function translations(): array
         'from' => 'desde',
         // --- Product widgets ---
         'BTC, ETH, USDT, USDC, XRP at live market rates.' => 'BTC, ETH, USDT, USDC, XRP a tasas de mercado en vivo.',
-        'Borrow %s – %s' => 'Preste entre %s y %s',
+        'Borrow %s - %s' => 'Preste entre %s y %s',
         'Electricity, internet, airtime and more.' => 'Electricidad, internet, tiempo aire y más.',
         'Everything your money needs, in one bank.' => 'Todo lo que su dinero necesita, en un solo banco.',
         'Explore' => 'Explorar',
@@ -2246,7 +2246,7 @@ function translations(): array
         'from' => 'à partir de',
         // --- Product widgets ---
         'BTC, ETH, USDT, USDC, XRP at live market rates.' => 'BTC, ETH, USDT, USDC, XRP aux taux du marché.',
-        'Borrow %s – %s' => 'Empruntez %s – %s',
+        'Borrow %s - %s' => 'Empruntez %s – %s',
         'Electricity, internet, airtime and more.' => 'Électricité, internet, crédit mobile et plus.',
         'Everything your money needs, in one bank.' => 'Tout ce dont votre argent a besoin, dans une seule banque.',
         'Explore' => 'Découvrir',
