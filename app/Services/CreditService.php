@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Simulated credit scoring (300-850) from observable behaviour:
+ * Credit scoring (300-850) from observable behaviour:
  * account age, transaction history, balances, loan/repayment history,
  * failed payments and risk alerts. Cached in credit_scores.
  */

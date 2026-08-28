@@ -56,7 +56,7 @@ try {
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#landNav"><span class="navbar-toggler-icon"></span></button>
     <div class="collapse navbar-collapse" id="landNav">
       <div class="navbar-nav ms-auto anchor-links gap-lg-3 my-2 my-lg-0">
-        <a class="nav-link" href="#savings"><?=e(t('Savings'))?></a>
+        <a class="nav-link" href="#products"><?=e(t('Our products'))?></a>
         <a class="nav-link" href="#deposits"><?=e(t('Fixed deposits'))?></a>
         <a class="nav-link" href="#loans"><?=e(t('Loans'))?></a>
         <a class="nav-link" href="#digital"><?=e(t('Digital banking'))?></a>
@@ -127,6 +127,51 @@ try {
 </section>
 
 <main class="container py-5">
+
+  <!-- PRODUCT WIDGETS -->
+  <section class="mb-5" id="products">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+      <div>
+        <h2 class="fw-bold mb-1"><?=e(t('Our products'))?></h2>
+        <p class="text-muted mb-0"><?=e(t('Everything your money needs, in one bank.'))?></p>
+      </div>
+    </div>
+    <div class="row g-3">
+      <?php
+      $maxSaveRate = $savings ? max(array_map(fn($p) => (float)$p['interest_rate'], $savings)) : null;
+      $bestTerm = $terms ? $terms[0] : null;
+      foreach ($terms as $tp) { if ((float)$tp['interest_rate'] > (float)$bestTerm['interest_rate']) $bestTerm = $tp; }
+      $minLoanRate = $loanProducts ? min(array_map(fn($p) => (float)$p['annual_rate'], $loanProducts)) : null;
+      $loanMin = $loanProducts ? min(array_map(fn($p) => (float)$p['min_amount'], $loanProducts)) : null;
+      $loanMax = $loanProducts ? max(array_map(fn($p) => (float)$p['max_amount'], $loanProducts)) : null;
+      $trim = fn($n) => rtrim(rtrim(number_format($n, 3, '.', ''), '0'), '.');
+      $widgets = [
+        ['bi-piggy-bank', 'text-bg-success', t('Savings'), $maxSaveRate !== null ? t('Up to %s%% p.a.', null, [$trim($maxSaveRate)]) : null, count($savings) . ' ' . t('savings products to choose from'), '#savings'],
+        ['bi-lock', 'text-bg-success', t('Fixed deposits'), $bestTerm ? t('Up to %s%% p.a.', null, [$trim((float)$bestTerm['interest_rate'])]) : null, $bestTerm ? t('Terms up to %s days', null, [(string)(int)$bestTerm['default_term_days']]) : null, '#deposits'],
+        ['bi-bank', 'text-bg-primary', t('Loans'), $minLoanRate !== null ? t('From %s%% p.a.', null, [$trim($minLoanRate)]) : null, ($loanMin !== null && $loanMax !== null) ? t('Borrow %s – %s', null, [format_money($loanMin), format_money($loanMax)]) : null, '#loans'],
+        ['bi-credit-card', 'text-bg-dark', t('Cards'), t('Virtual & debit cards'), t('Freeze instantly, set limits, pay online and at POS.'), '#digital'],
+        ['bi-currency-bitcoin', 'text-bg-warning', t('Crypto wallet'), t('Live rates'), t('BTC, ETH, USDT, USDC, XRP at live market rates.'), '#digital'],
+        ['bi-lightning-charge', 'text-bg-info', t('Bill payments'), t('One-off & recurring'), t('Electricity, internet, airtime and more.'), '#digital'],
+      ];
+      foreach ($widgets as [$wIcon, $wColor, $wTitle, $wStat, $wDesc, $wHref]): ?>
+      <div class="col-md-6 col-xl-4">
+        <a href="<?=$wHref?>" class="text-decoration-none">
+          <div class="card product-card border-0 shadow-sm h-100"><div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <span class="badge <?=$wColor?> rounded-circle d-grid place-items-center" style="width:46px;height:46px;font-size:20px"><i class="bi <?=$wIcon?>"></i></span>
+              <div>
+                <div class="fw-bold fs-5 text-dark"><?=$wTitle?></div>
+                <?php if ($wStat): ?><div class="fw-semibold text-success small"><?=$wStat?></div><?php endif; ?>
+              </div>
+            </div>
+            <p class="small text-muted mb-3"><?=$wDesc?></p>
+            <span class="small fw-semibold text-primary"><?=e(t('Explore'))?> <i class="bi bi-arrow-right"></i></span>
+          </div></div>
+        </a>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </section>
 
   <!-- SAVINGS PRODUCTS -->
   <section class="mb-5" id="savings">

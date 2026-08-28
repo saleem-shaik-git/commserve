@@ -46,7 +46,7 @@ require __DIR__ . '/partials/header.php';
       <button class="btn btn-primary"><i class="bi bi-play-circle me-1"></i><?=e(t('Run daily engine (interest · maturities · late loans)'))?></button>
     </form>
   </div>
-  <p class="text-muted small"><?=e(t('All rates are simulated. The engine posts interest to the ledger, marks matured deposits and flags late installments.'))?></p>
+  <p class="text-muted small"><?=e(t('The engine posts interest to the ledger, marks matured deposits and flags late installments.'))?></p>
 
   <div class="card border-0 shadow-sm mb-3">
     <div class="card-header bg-white fw-bold"><?=e(t('Savings products'))?></div>

@@ -104,7 +104,7 @@ require __DIR__ . '/partials/header.php';
           </tbody>
         </table></div>
       </div>
-      <div class="card border-0 shadow-sm"><div class="card-header bg-white fw-bold"><?=e(t('Product profitability simulation'))?></div>
+      <div class="card border-0 shadow-sm"><div class="card-header bg-white fw-bold"><?=e(t('Product profitability'))?></div>
         <div class="table-responsive"><table class="table table-sm mb-0 small">
           <thead class="table-light"><tr><th><?=e(t('Product'))?></th><th><?=e(t('Interest paid to customers'))?></th></tr></thead>
           <tbody>
@@ -113,7 +113,7 @@ require __DIR__ . '/partials/header.php';
             <tr class="table-success"><td><b><?=e(t('Loan interest income (scheduled)'))?></b></td><td><b><?=format_money((float)$loanTotals['interest_income'])?></b></td></tr>
           </tbody>
         </table></div>
-        <div class="card-body small text-muted"><?=e(t('Net simulation: loan interest income minus savings interest expense.'))?> <b><?=format_money((float)$loanTotals['interest_income'] - $interestExpense)?></b></div>
+        <div class="card-body small text-muted"><?=e(t('Net: loan interest income minus savings interest expense.'))?> <b><?=format_money((float)$loanTotals['interest_income'] - $interestExpense)?></b></div>
       </div>
     </div>
   </div>

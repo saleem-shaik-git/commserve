@@ -4,7 +4,7 @@ require_once __DIR__ . '/SecurityService.php';
 require_once __DIR__ . '/CreditService.php';
 
 /**
- * Simulated lending engine: application -> KYC gate -> risk assessment
+ * Lending engine: application -> KYC gate -> risk assessment
  * (credit score) -> decision (auto/admin) -> disbursement -> amortized
  * schedule -> repayments (ledger-backed) -> late/default processing.
  */
