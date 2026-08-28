@@ -54,7 +54,7 @@ final class CreditService
         $f[] = ['factor' => 'Account age', 'detail' => $ageDays . ' days', 'points' => min(60, (int)($ageDays / 30 * 2))];
 
         // 2. Transaction history (last 90 days)
-        $s = $this->db->prepare('SELECT COUNT(*), COALESCE(SUM(amount),0) FROM transactions t JOIN ledger_entries le ON le.transaction_id=t.id JOIN accounts a ON a.id=le.account_id WHERE a.user_id=? AND t.status="completed" AND t.created_at>=CURRENT_DATE - INTERVAL 90 DAY');
+        $s = $this->db->prepare('SELECT COUNT(*), COALESCE(SUM(t.amount),0) FROM transactions t JOIN ledger_entries le ON le.transaction_id=t.id JOIN accounts a ON a.id=le.account_id WHERE a.user_id=? AND t.status="completed" AND t.created_at>=CURRENT_DATE - INTERVAL 90 DAY');
         $s->execute([$userId]);
         [$cnt, $vol] = $s->fetch(PDO::FETCH_NUM);
         $f[] = ['factor' => 'Transaction activity (90d)', 'detail' => (int)$cnt . ' tx', 'points' => min(60, (int)$cnt * 2)];
